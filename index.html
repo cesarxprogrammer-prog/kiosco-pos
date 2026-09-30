@@ -127,6 +127,7 @@ body{
     padding:15px;
     display:flex;
     flex-direction:column;
+    min-height:0;
 }
 
 .cart-title{
@@ -138,6 +139,7 @@ body{
 
 .cart-items{
     flex:1;
+    min-height:0;
     overflow-y:auto;
 }
 
@@ -194,6 +196,7 @@ body{
 .cart-summary{
     border-top:2px solid #333;
     padding-top:12px;
+    flex-shrink:0;
 }
 
 .total-row{
@@ -227,8 +230,22 @@ body{
     display:none;
     align-items:center;
     justify-content:center;
-    z-index:10;
     padding:15px;
+    z-index:10;
+}
+
+#scanner-modal{
+    z-index:100;
+}
+
+#payment-modal{
+    z-index:50;
+}
+
+#product-modal,
+#admin-modal,
+#history-modal{
+    z-index:10;
 }
 
 .modal{
@@ -370,6 +387,34 @@ body{
 
 
 /* =========================
+   CÓDIGO PRODUCTO
+========================= */
+
+.code-input-row{
+    display:flex;
+    gap:8px;
+}
+
+.code-input-row input{
+    flex:1;
+}
+
+.code-status{
+    margin-top:5px;
+    font-size:13px;
+    font-weight:bold;
+}
+
+.code-status.available{
+    color:#20c997;
+}
+
+.code-status.duplicate{
+    color:#ff5c6c;
+}
+
+
+/* =========================
    MÓVIL
 ========================= */
 
@@ -428,6 +473,9 @@ body{
         border-left:0;
         border-top:2px solid #333;
         padding:10px;
+        display:flex;
+        flex-direction:column;
+        min-height:0;
     }
 
     .cart.expanded{
@@ -632,7 +680,27 @@ body{
 
             <label>Código</label>
 
-            <input id="product-code">
+            <div class="code-input-row">
+
+                <input
+                    id="product-code"
+                    oninput="validateProductCode()"
+                >
+
+                <button
+                    type="button"
+                    class="top-btn"
+                    onclick="openProductScanner()"
+                >
+                    📷
+                </button>
+
+            </div>
+
+            <div
+                id="product-code-status"
+                class="code-status"
+            ></div>
 
         </div>
 
@@ -942,8 +1010,18 @@ let scannerStream = null;
 let scannerActive = false;
 let barcodeDetector = null;
 
+/*
+    "sale"    = escanear para vender
+    "product" = escanear para registrar producto
+*/
 
-async function openScanner(){
+let scannerMode = "sale";
+
+
+async function openScanner(mode = "sale"){
+
+    scannerMode = mode;
+
 
     const modal =
         document.getElementById(
@@ -969,7 +1047,26 @@ async function openScanner(){
         );
 
 
+    const title =
+        document.querySelector(
+            "#scanner-modal h2"
+        );
+
+
     modal.style.display = "flex";
+
+
+    if(scannerMode === "product"){
+
+        title.textContent =
+            "📷 Registrar código";
+
+    }else{
+
+        title.textContent =
+            "📷 Escanear producto";
+
+    }
 
 
     codeLabel.textContent =
@@ -1008,8 +1105,10 @@ async function openScanner(){
         scannerStream =
             await navigator.mediaDevices.getUserMedia({
 
-                video:{
-                    facingMode:"environment"
+                video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 4096 },
+        height: { ideal: 2160 }
                 },
 
                 audio:false
@@ -1041,6 +1140,13 @@ async function openScanner(){
             error.name;
 
     }
+
+}
+
+
+function openProductScanner(){
+
+    openScanner("product");
 
 }
 
@@ -1080,12 +1186,57 @@ async function buscarCodigo(){
                 "Código: " + codigo;
 
 
+            /*
+                =========================
+                MODO REGISTRAR PRODUCTO
+                =========================
+            */
+
+            if(scannerMode === "product"){
+
+                detenerScanner();
+
+
+                document.getElementById(
+                    "product-code"
+                ).value = codigo;
+
+
+                validateProductCode();
+
+
+                document.getElementById(
+                    "scanner-status"
+                ).textContent =
+                    "✅ Código leído";
+
+
+                setTimeout(() => {
+
+                    closeScanner();
+
+                },500);
+
+
+                return;
+
+            }
+
+
+            /*
+                =========================
+                MODO VENTA
+                =========================
+            */
+
             detenerScanner();
 
 
             const product =
                 products.find(
-                    p => String(p.code) === String(codigo)
+                    p =>
+                        String(p.code) ===
+                        String(codigo)
                 );
 
 
@@ -1193,6 +1344,9 @@ function detenerScanner(){
 function closeScanner(){
 
     detenerScanner();
+
+
+    scannerMode = "sale";
 
 
     document.getElementById(
@@ -2078,6 +2232,17 @@ function openNewProduct(){
 
 
     document.getElementById(
+        "product-code-status"
+    ).textContent = "";
+
+
+    document.getElementById(
+        "product-code-status"
+    ).className =
+        "code-status";
+
+
+    document.getElementById(
         "product-modal"
     ).style.display = "flex";
 
@@ -2140,6 +2305,9 @@ function openEditProduct(id){
     ).style.display = "block";
 
 
+    validateProductCode();
+
+
     closeModal("admin-modal");
 
 
@@ -2149,6 +2317,80 @@ function openEditProduct(id){
 
 }
 
+
+/* =========================
+   VALIDACIÓN DEL CÓDIGO
+========================= */
+
+function validateProductCode(){
+
+    const input =
+        document.getElementById(
+            "product-code"
+        );
+
+
+    const status =
+        document.getElementById(
+            "product-code-status"
+        );
+
+
+    const code =
+        input.value.trim();
+
+
+    status.textContent = "";
+
+    status.className =
+        "code-status";
+
+
+    if(!code){
+
+        return false;
+
+    }
+
+
+    const duplicate =
+        products.find(
+            p =>
+                String(p.code) === String(code) &&
+                p.id !== editingProductId
+        );
+
+
+    if(duplicate){
+
+        status.textContent =
+            "⚠️ Este código ya está registrado.";
+
+        status.classList.add(
+            "duplicate"
+        );
+
+        return false;
+
+    }
+
+
+    status.textContent =
+        "✅ Código disponible";
+
+    status.classList.add(
+        "available"
+    );
+
+
+    return true;
+
+}
+
+
+/* =========================
+   GUARDAR PRODUCTO
+========================= */
 
 function saveProduct(){
 
@@ -2198,17 +2440,17 @@ function saveProduct(){
     }
 
 
-    const duplicate =
-        products.find(
-            p =>
-                String(p.code) === code &&
-                p.id !== editingProductId
+    /*
+        Segunda validación al guardar.
+        Esto evita guardar un código duplicado
+        aunque el campo haya sido modificado.
+    */
+
+    if(!validateProductCode()){
+
+        alert(
+            "Ya existe un producto con ese código."
         );
-
-
-    if(duplicate){
-
-        alert("Ya existe un producto con ese código.");
 
         return;
 
@@ -2279,6 +2521,10 @@ function saveProduct(){
 
 }
 
+
+/* =========================
+   ELIMINAR PRODUCTO
+========================= */
 
 function deleteProduct(){
 
