@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Prueba de cámara</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    background:#121212;
+    color:#f1f1f1;
+    font-family:Arial,sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:20px;
+}
+
+h1{
+    font-size:22px;
+}
+
+video{
+    width:100%;
+    max-width:500px;
+    border-radius:12px;
+    background:#000;
+    margin:20px 0;
+}
+
+button{
+    width:100%;
+    max-width:500px;
+    padding:15px;
+    border:0;
+    border-radius:8px;
+    background:#198754;
+    color:white;
+    font-size:18px;
+}
+
+#status{
+    margin-top:15px;
+    color:#aaa;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📷 Prueba de cámara</h1>
+
+<video id="video" autoplay playsinline></video>
+
+<button onclick="iniciarCamara()">
+    Iniciar cámara
+</button>
+
+<div id="status">
+    Cámara detenida
+</div>
+
+<script>
+
+async function iniciarCamara(){
+
+    const video =
+        document.getElementById("video");
+
+    const status =
+        document.getElementById("status");
+
+    try{
+
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video:{
+                    facingMode:"environment"
+                },
+
+                audio:false
+
+            });
+
+        video.srcObject = stream;
+
+        status.textContent =
+            "✅ Cámara funcionando";
+
+    }catch(error){
+
+        console.error(error);
+
+        status.textContent =
+            "❌ No se pudo iniciar la cámara: " +
+            error.name;
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>
