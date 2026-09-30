@@ -1089,8 +1089,10 @@ async function openScanner(mode = "sale"){
         scannerStream =
             await navigator.mediaDevices.getUserMedia({
 
-                video:{
-                    facingMode:"environment"
+                video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 4096 },
+        height: { ideal: 2160 }
                 },
 
                 audio:false
