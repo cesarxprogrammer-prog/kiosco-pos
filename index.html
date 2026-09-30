@@ -3,99 +3,980 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Prueba de lector</title>
+<title>Kiosco POS</title>
 
 <style>
 *{
     box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Arial,sans-serif;
 }
 
 body{
-    margin:0;
     background:#121212;
     color:#f1f1f1;
-    font-family:Arial,sans-serif;
-    min-height:100vh;
-    padding:20px;
-    text-align:center;
+    height:100vh;
+    overflow:hidden;
 }
 
-h1{
-    font-size:22px;
+.topbar{
+    height:70px;
+    background:#222;
+    color:white;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 15px;
 }
 
-video{
-    width:100%;
-    max-width:500px;
-    margin:20px auto;
-    display:block;
-    border-radius:12px;
-    background:#000;
+.topbar h1{
+    font-size:20px;
+    margin-right:auto;
 }
 
-button{
-    width:100%;
-    max-width:500px;
+.search{
+    width:260px;
+    padding:12px;
+    border-radius:8px;
+    border:1px solid #444;
+    font-size:16px;
+    background:#292929;
+    color:#f1f1f1;
+}
+
+.search::placeholder{
+    color:#aaa;
+}
+
+.top-btn{
+    border:0;
+    border-radius:8px;
+    padding:11px 13px;
+    cursor:pointer;
+    font-size:15px;
+}
+
+.main{
+    height:calc(100vh - 70px);
+    display:flex;
+}
+
+.catalog{
+    width:60%;
     padding:15px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+}
+
+.products-grid{
+    flex:1;
+    overflow-y:auto;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+    gap:12px;
+}
+
+.product-card{
+    background:#1e1e1e;
+    border-radius:10px;
+    padding:14px;
+    height:125px;
+    box-shadow:0 2px 5px #0008;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    cursor:pointer;
+}
+
+.product-card:active{
+    transform:scale(.97);
+}
+
+.product-card.disabled{
+    opacity:.45;
+    cursor:not-allowed;
+}
+
+.p-name{
+    font-weight:bold;
+    font-size:14px;
+}
+
+.p-price{
+    color:#20c997;
+    font-size:17px;
+    font-weight:bold;
+}
+
+.p-stock{
+    font-size:13px;
+    color:#aaa;
+}
+
+.p-stock.zero{
+    color:#ff5c6c;
+    font-weight:bold;
+}
+
+.cart{
+    width:40%;
+    background:#1e1e1e;
+    border-left:2px solid #333;
+    padding:15px;
+    display:flex;
+    flex-direction:column;
+}
+
+.cart-title{
+    font-size:20px;
+    font-weight:bold;
+    padding:10px 0;
+    border-bottom:2px solid #333;
+}
+
+.cart-items{
+    flex:1;
+    overflow-y:auto;
+}
+
+.cart-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    padding:12px 0;
+    border-bottom:1px solid #333;
+}
+
+.item-details{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+}
+
+.item-name{
+    font-weight:bold;
+}
+
+.item-price{
+    color:#aaa;
+    font-size:13px;
+}
+
+.item-actions{
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.qty-btn{
+    border:0;
+    background:#333;
+    color:#f1f1f1;
+    border-radius:5px;
+    width:30px;
+    height:30px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.btn-remove{
+    border:0;
+    background:#dc3545;
+    color:white;
+    border-radius:5px;
+    padding:7px;
+    cursor:pointer;
+}
+
+.cart-summary{
+    border-top:2px solid #333;
+    padding-top:12px;
+}
+
+.total-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:23px;
+    font-weight:bold;
+    margin-bottom:12px;
+}
+
+.checkout{
+    width:100%;
+    padding:14px;
     border:0;
     border-radius:8px;
     background:#198754;
     color:white;
     font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
 }
 
-#result{
-    margin-top:20px;
-    font-size:24px;
+.checkout:disabled{
+    background:#555;
+}
+
+.modal-bg{
+    position:fixed;
+    inset:0;
+    background:#000b;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:10;
+    padding:15px;
+}
+
+.modal{
+    background:#1e1e1e;
+    color:#f1f1f1;
+    width:min(600px,100%);
+    max-height:90vh;
+    overflow-y:auto;
+    border-radius:12px;
+    padding:20px;
+}
+
+.modal h2{
+    margin-bottom:15px;
+}
+
+.form-group{
+    margin-bottom:12px;
+}
+
+.form-group label{
+    display:block;
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+.form-group input,
+.form-group select{
+    width:100%;
+    padding:11px;
+    border:1px solid #444;
+    border-radius:7px;
+    font-size:16px;
+    background:#292929;
+    color:#f1f1f1;
+}
+
+.modal-actions{
+    display:flex;
+    gap:8px;
+    margin-top:15px;
+}
+
+.modal-actions button{
+    flex:1;
+    padding:12px;
+    border:0;
+    border-radius:7px;
+    cursor:pointer;
     font-weight:bold;
 }
 
-#status{
-    margin-top:10px;
+.btn-primary{
+    background:#198754;
+    color:white;
+}
+
+.btn-secondary{
+    background:#444;
+    color:#f1f1f1;
+}
+
+.btn-danger{
+    background:#dc3545;
+    color:white;
+}
+
+.admin-product,
+.sale{
+    border:1px solid #3a3a3a;
+    border-radius:8px;
+    padding:12px;
+    margin-bottom:10px;
+    background:#242424;
+}
+
+.admin-row,
+.sale-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+.admin-info,
+.sale-info{
+    flex:1;
+}
+
+.admin-info small,
+.sale-info small{
     color:#aaa;
+}
+
+.history-status{
+    font-weight:bold;
+}
+
+.cancelled{
+    color:#ff5c6c;
+}
+
+.completed{
+    color:#20c997;
+}
+
+.payment-box{
+    background:#292929;
+    padding:12px;
+    border-radius:8px;
+    margin-bottom:12px;
+}
+
+
+/* =========================
+   SCANNER
+========================= */
+
+.scanner-video{
+    width:100%;
+    display:block;
+    background:#000;
+    border-radius:10px;
+    margin-bottom:12px;
+}
+
+.scanner-status{
+    text-align:center;
+    color:#aaa;
+    margin-bottom:12px;
+}
+
+.scanner-code{
+    text-align:center;
+    font-size:20px;
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+
+/* =========================
+   MÓVIL
+========================= */
+
+@media(max-width:700px){
+
+    body{
+        overflow:hidden;
+    }
+
+    .topbar{
+        height:60px;
+        flex-wrap:nowrap;
+    }
+
+    .topbar h1{
+        display:none;
+    }
+
+    .search{
+        flex:1;
+        min-width:0;
+        width:auto;
+    }
+
+    .top-btn{
+        padding:10px;
+    }
+
+    .main{
+        height:calc(100vh - 60px);
+        display:block;
+        position:relative;
+    }
+
+    .catalog{
+        width:100%;
+        height:60%;
+        padding:10px;
+    }
+
+    .products-grid{
+        grid-template-columns:repeat(2,1fr);
+        gap:8px;
+    }
+
+    .product-card{
+        height:110px;
+    }
+
+    .cart{
+        position:absolute;
+        left:0;
+        bottom:0;
+        width:100%;
+        height:40%;
+        border-left:0;
+        border-top:2px solid #333;
+        padding:10px;
+    }
+
+    .cart.expanded{
+        height:85%;
+    }
+
+    .cart-title{
+        cursor:pointer;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<h1>📷 Lector de código</h1>
+<div class="topbar">
 
-<video
-    id="video"
-    autoplay
-    playsinline>
-</video>
+    <h1>🛒 Kiosco POS</h1>
 
-<button onclick="iniciarScanner()">
-    Iniciar lector
-</button>
+    <input
+        id="search"
+        class="search"
+        placeholder="🔍 Buscar producto..."
+        oninput="filterProducts()"
+    >
 
-<div id="status">
-    Lector detenido
+    <button
+        class="top-btn"
+        onclick="openScanner()"
+    >
+        📷
+    </button>
+
+    <button
+        class="top-btn"
+        onclick="openNewProduct()"
+    >
+        ＋ Nuevo
+    </button>
+
+    <button
+        class="top-btn"
+        onclick="openHistory()"
+    >
+        📋
+    </button>
+
+    <button
+        class="top-btn"
+        onclick="openAdmin()"
+    >
+        ⚙️
+    </button>
+
 </div>
 
-<div id="result">
-    Código: —
+
+<div class="main">
+
+    <section class="catalog">
+
+        <div
+            id="products"
+            class="products-grid"
+        ></div>
+
+    </section>
+
+
+    <section
+        id="cart"
+        class="cart"
+    >
+
+        <div
+            class="cart-title"
+            onclick="toggleCart()"
+        >
+            🛒 Carrito
+
+            <span id="cart-count">
+                0
+            </span>
+
+            <span
+                id="cart-arrow"
+                style="float:right"
+            >
+                ⌃
+            </span>
+
+        </div>
+
+
+        <div
+            id="cart-items"
+            class="cart-items"
+        ></div>
+
+
+        <div class="cart-summary">
+
+            <div class="total-row">
+
+                <span>Total</span>
+
+                <span id="total-amount">
+                    $0
+                </span>
+
+            </div>
+
+
+            <button
+                id="checkout-btn"
+                class="checkout"
+                onclick="openPayment()"
+            >
+                Registrar venta
+            </button>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- =========================
+     SCANNER
+========================= -->
+
+<div
+    id="scanner-modal"
+    class="modal-bg"
+>
+
+    <div class="modal">
+
+        <h2>
+            📷 Escanear producto
+        </h2>
+
+
+        <video
+            id="scanner-video"
+            class="scanner-video"
+            autoplay
+            playsinline
+        ></video>
+
+
+        <div
+            id="scanner-status"
+            class="scanner-status"
+        >
+            Iniciando cámara...
+        </div>
+
+
+        <div
+            id="scanner-code"
+            class="scanner-code"
+        >
+            Código: —
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="btn-secondary"
+                onclick="closeScanner()"
+            >
+                Cerrar
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     MODAL PRODUCTO
+========================= -->
+
+<div
+    id="product-modal"
+    class="modal-bg"
+>
+
+    <div class="modal">
+
+        <h2 id="product-modal-title">
+            Nuevo producto
+        </h2>
+
+
+        <div class="form-group">
+
+            <label>Código</label>
+
+            <input id="product-code">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Nombre</label>
+
+            <input id="product-name">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Precio</label>
+
+            <input
+                id="product-price"
+                type="number"
+                min="0"
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>Stock disponible</label>
+
+            <input
+                id="product-stock"
+                type="number"
+                min="0"
+            >
+
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="btn-secondary"
+                onclick="closeModal('product-modal')"
+            >
+                Cancelar
+            </button>
+
+
+            <button
+                class="btn-primary"
+                onclick="saveProduct()"
+            >
+                Guardar
+            </button>
+
+
+            <button
+                id="delete-product-btn"
+                class="btn-danger"
+                onclick="deleteProduct()"
+                style="display:none"
+            >
+                Eliminar
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     ADMIN
+========================= -->
+
+<div
+    id="admin-modal"
+    class="modal-bg"
+>
+
+    <div class="modal">
+
+        <h2>
+            ⚙️ Administración
+        </h2>
+
+
+        <div id="admin-products"></div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="btn-secondary"
+                onclick="closeModal('admin-modal')"
+            >
+                Cerrar
+            </button>
+
+
+            <button
+                class="btn-primary"
+                onclick="openNewProductFromAdmin()"
+            >
+                ＋ Nuevo producto
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     HISTORIAL
+========================= -->
+
+<div
+    id="history-modal"
+    class="modal-bg"
+>
+
+    <div class="modal">
+
+        <h2>
+            📋 Historial de ventas
+        </h2>
+
+
+        <div id="sales-history"></div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="btn-secondary"
+                onclick="closeModal('history-modal')"
+            >
+                Cerrar
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     PAGO
+========================= -->
+
+<div
+    id="payment-modal"
+    class="modal-bg"
+>
+
+    <div class="modal">
+
+        <h2>
+            💳 Registrar venta
+        </h2>
+
+
+        <div class="payment-box">
+
+            <strong>Total:</strong>
+
+            <span id="payment-total">
+                $0
+            </span>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                Medio de pago
+            </label>
+
+
+            <select id="payment-method">
+
+                <option value="efectivo">
+                    💵 Efectivo
+                </option>
+
+                <option value="debito">
+                    💳 Débito
+                </option>
+
+                <option value="credito">
+                    💳 Crédito
+                </option>
+
+                <option value="transferencia">
+                    📱 Transferencia
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                class="btn-secondary"
+                onclick="closeModal('payment-modal')"
+            >
+                Cancelar
+            </button>
+
+
+            <button
+                class="btn-primary"
+                onclick="confirmSale()"
+            >
+                Confirmar venta
+            </button>
+
+        </div>
+
+    </div>
+
 </div>
 
 
 <script>
 
-let stream = null;
-let scannerActivo = false;
+/* =========================
+   DATOS
+========================= */
 
-async function iniciarScanner(){
+const defaultProducts = [
+
+    {
+        id:1,
+        code:"779000000001",
+        name:"Alfajor Triple",
+        price:800,
+        stock:20
+    },
+
+    {
+        id:2,
+        code:"779000000002",
+        name:"Gaseosa Cola 500ml",
+        price:1200,
+        stock:20
+    },
+
+    {
+        id:3,
+        code:"779000000003",
+        name:"Agua Mineral 500ml",
+        price:900,
+        stock:20
+    },
+
+    {
+        id:4,
+        code:"779000000004",
+        name:"Chicles de Menta",
+        price:300,
+        stock:20
+    },
+
+    {
+        id:5,
+        code:"779000000005",
+        name:"Papas Fritas Bolsa",
+        price:1500,
+        stock:20
+    }
+
+];
+
+
+let products = JSON.parse(
+    localStorage.getItem("products")
+) || defaultProducts;
+
+
+let cart = JSON.parse(
+    localStorage.getItem("cart")
+) || [];
+
+
+let sales = JSON.parse(
+    localStorage.getItem("sales")
+) || [];
+
+
+let editingProductId = null;
+
+
+/* =========================
+   SCANNER
+========================= */
+
+let scannerStream = null;
+let scannerActive = false;
+let barcodeDetector = null;
+
+
+async function openScanner(){
+
+    const modal =
+        document.getElementById(
+            "scanner-modal"
+        );
+
 
     const video =
-        document.getElementById("video");
+        document.getElementById(
+            "scanner-video"
+        );
+
 
     const status =
-        document.getElementById("status");
+        document.getElementById(
+            "scanner-status"
+        );
 
-    const result =
-        document.getElementById("result");
+
+    const codeLabel =
+        document.getElementById(
+            "scanner-code"
+        );
+
+
+    modal.style.display = "flex";
+
+
+    codeLabel.textContent =
+        "Código: —";
+
+
+    scannerActive = false;
 
 
     if(!("BarcodeDetector" in window)){
@@ -110,7 +991,21 @@ async function iniciarScanner(){
 
     try{
 
-        stream =
+        barcodeDetector =
+            new BarcodeDetector({
+
+                formats:[
+                    "ean_13",
+                    "ean_8",
+                    "upc_a",
+                    "upc_e",
+                    "code_128"
+                ]
+
+            });
+
+
+        scannerStream =
             await navigator.mediaDevices.getUserMedia({
 
                 video:{
@@ -122,12 +1017,16 @@ async function iniciarScanner(){
             });
 
 
-        video.srcObject = stream;
+        video.srcObject =
+            scannerStream;
 
-        scannerActivo = true;
+
+        scannerActive = true;
+
 
         status.textContent =
             "🟢 Buscando código...";
+
 
         buscarCodigo();
 
@@ -136,8 +1035,10 @@ async function iniciarScanner(){
 
         console.error(error);
 
+
         status.textContent =
-            "❌ Error: " + error.name;
+            "❌ No se pudo iniciar la cámara: " +
+            error.name;
 
     }
 
@@ -146,32 +1047,22 @@ async function iniciarScanner(){
 
 async function buscarCodigo(){
 
-    if(!scannerActivo)
+    if(!scannerActive)
         return;
 
 
     const video =
-        document.getElementById("video");
-
-
-    const detector =
-        new BarcodeDetector({
-
-            formats:[
-                "ean_13",
-                "ean_8",
-                "upc_a",
-                "upc_e",
-                "code_128"
-            ]
-
-        });
+        document.getElementById(
+            "scanner-video"
+        );
 
 
     try{
 
         const barcodes =
-            await detector.detect(video);
+            await barcodeDetector.detect(
+                video
+            );
 
 
         if(barcodes.length > 0){
@@ -180,28 +1071,76 @@ async function buscarCodigo(){
                 barcodes[0].rawValue;
 
 
+            scannerActive = false;
+
+
             document.getElementById(
-                "result"
+                "scanner-code"
             ).textContent =
                 "Código: " + codigo;
 
 
-            document.getElementById(
-                "status"
-            ).textContent =
-                "✅ Código detectado";
+            detenerScanner();
 
 
-            scannerActivo = false;
+            const product =
+                products.find(
+                    p => String(p.code) === String(codigo)
+                );
 
 
-            if(stream){
+            if(!product){
 
-                stream
-                    .getTracks()
-                    .forEach(track => track.stop());
+                document.getElementById(
+                    "scanner-status"
+                ).textContent =
+                    "❌ Producto no encontrado";
+
+
+                alert(
+                    "No existe un producto con el código " +
+                    codigo
+                );
+
+
+                return;
 
             }
+
+
+            if(product.stock <= 0){
+
+                document.getElementById(
+                    "scanner-status"
+                ).textContent =
+                    "❌ Producto sin stock";
+
+
+                alert(
+                    product.name +
+                    " no tiene stock disponible."
+                );
+
+
+                return;
+
+            }
+
+
+            document.getElementById(
+                "scanner-status"
+            ).textContent =
+                "✅ Producto encontrado";
+
+
+            addToCart(product.id);
+
+
+            setTimeout(() => {
+
+                closeScanner();
+
+            },500);
 
 
             return;
@@ -215,9 +1154,1297 @@ async function buscarCodigo(){
     }
 
 
-    requestAnimationFrame(buscarCodigo);
+    requestAnimationFrame(
+        buscarCodigo
+    );
 
 }
+
+
+function detenerScanner(){
+
+    scannerActive = false;
+
+
+    if(scannerStream){
+
+        scannerStream
+            .getTracks()
+            .forEach(track =>
+                track.stop()
+            );
+
+        scannerStream = null;
+
+    }
+
+
+    const video =
+        document.getElementById(
+            "scanner-video"
+        );
+
+
+    video.srcObject = null;
+
+}
+
+
+function closeScanner(){
+
+    detenerScanner();
+
+
+    document.getElementById(
+        "scanner-modal"
+    ).style.display = "none";
+
+}
+
+
+/* =========================
+   STORAGE
+========================= */
+
+function saveProducts(){
+
+    localStorage.setItem(
+        "products",
+        JSON.stringify(products)
+    );
+
+}
+
+
+function saveCart(){
+
+    localStorage.setItem(
+        "cart",
+        JSON.stringify(cart)
+    );
+
+}
+
+
+function saveSales(){
+
+    localStorage.setItem(
+        "sales",
+        JSON.stringify(sales)
+    );
+
+}
+
+
+/* =========================
+   MIGRACIÓN DEL STOCK
+========================= */
+
+if(
+    cart.length > 0 &&
+    localStorage.getItem("cartStockReserved") !== "true"
+){
+
+    cart.forEach(item => {
+
+        const product = products.find(
+            p => p.id === item.id
+        );
+
+        if(product){
+
+            product.stock = Math.max(
+                0,
+                product.stock - item.quantity
+            );
+
+        }
+
+    });
+
+    saveProducts();
+
+    localStorage.setItem(
+        "cartStockReserved",
+        "true"
+    );
+
+}
+
+
+/* =========================
+   CATÁLOGO
+========================= */
+
+function renderCatalog(list){
+
+    const container =
+        document.getElementById("products");
+
+    container.innerHTML = "";
+
+    list.forEach(product => {
+
+        const card =
+            document.createElement("div");
+
+        card.className = "product-card";
+
+        if(product.stock <= 0){
+
+            card.classList.add("disabled");
+
+        }
+
+        card.onclick = () => {
+
+            if(product.stock > 0){
+
+                addToCart(product.id);
+
+            }
+
+        };
+
+
+        const stockText =
+            product.stock > 0
+            ? `Stock: ${product.stock}`
+            : "Sin stock";
+
+
+        card.innerHTML = `
+
+            <div class="p-name">
+                ${escapeHTML(product.name)}
+            </div>
+
+            <div class="p-price">
+                $${formatMoney(product.price)}
+            </div>
+
+            <div class="p-stock ${product.stock <= 0 ? "zero" : ""}">
+                ${stockText}
+            </div>
+
+        `;
+
+        container.appendChild(card);
+
+    });
+
+}
+
+
+function filterProducts(){
+
+    const query =
+        document
+        .getElementById("search")
+        .value
+        .toLowerCase()
+        .trim();
+
+
+    const filtered =
+        products.filter(product =>
+
+            product.name
+            .toLowerCase()
+            .includes(query)
+
+            ||
+
+            String(product.code)
+            .includes(query)
+
+        );
+
+
+    renderCatalog(filtered);
+
+}
+
+
+/* =========================
+   CARRITO
+========================= */
+
+function addToCart(id){
+
+    const product =
+        products.find(p => p.id === id);
+
+
+    if(!product || product.stock <= 0){
+
+        alert("No hay stock disponible.");
+
+        return;
+
+    }
+
+
+    const existing =
+        cart.find(item => item.id === id);
+
+
+    product.stock -= 1;
+
+
+    if(existing){
+
+        existing.quantity += 1;
+
+    }else{
+
+        cart.push({
+
+            id:product.id,
+            code:product.code,
+            name:product.name,
+            price:product.price,
+            quantity:1
+
+        });
+
+    }
+
+
+    saveProducts();
+    saveCart();
+
+    renderCatalog(
+        getFilteredProducts()
+    );
+
+    updateCartUI();
+
+}
+
+
+function increaseCart(id){
+
+    addToCart(id);
+
+}
+
+
+function decreaseCart(id){
+
+    const item =
+        cart.find(i => i.id === id);
+
+
+    if(!item) return;
+
+
+    const product =
+        products.find(p => p.id === id);
+
+
+    if(product){
+
+        product.stock += 1;
+
+    }
+
+
+    item.quantity -= 1;
+
+
+    if(item.quantity <= 0){
+
+        cart =
+            cart.filter(i => i.id !== id);
+
+    }
+
+
+    saveProducts();
+    saveCart();
+
+    renderCatalog(
+        getFilteredProducts()
+    );
+
+    updateCartUI();
+
+}
+
+
+function removeFromCart(id){
+
+    const item =
+        cart.find(i => i.id === id);
+
+
+    if(!item) return;
+
+
+    const product =
+        products.find(p => p.id === id);
+
+
+    if(product){
+
+        product.stock += item.quantity;
+
+    }
+
+
+    cart =
+        cart.filter(i => i.id !== id);
+
+
+    saveProducts();
+    saveCart();
+
+    renderCatalog(
+        getFilteredProducts()
+    );
+
+    updateCartUI();
+
+}
+
+
+function clearCart(){
+
+    cart.forEach(item => {
+
+        const product =
+            products.find(p => p.id === item.id);
+
+        if(product){
+
+            product.stock += item.quantity;
+
+        }
+
+    });
+
+
+    cart = [];
+
+
+    saveProducts();
+    saveCart();
+
+    renderCatalog(
+        getFilteredProducts()
+    );
+
+    updateCartUI();
+
+}
+
+
+function updateCartUI(){
+
+    const container =
+        document.getElementById("cart-items");
+
+    const totalLabel =
+        document.getElementById("total-amount");
+
+    const countLabel =
+        document.getElementById("cart-count");
+
+    const checkoutButton =
+        document.getElementById("checkout-btn");
+
+
+    container.innerHTML = "";
+
+
+    let total = 0;
+    let count = 0;
+
+
+    cart.forEach(item => {
+
+        const subtotal =
+            item.price * item.quantity;
+
+
+        total += subtotal;
+        count += item.quantity;
+
+
+        const div =
+            document.createElement("div");
+
+        div.className = "cart-item";
+
+
+        div.innerHTML = `
+
+            <div class="item-details">
+
+                <span class="item-name">
+                    ${escapeHTML(item.name)}
+                </span>
+
+                <span class="item-price">
+                    $${formatMoney(item.price)}
+                </span>
+
+            </div>
+
+
+            <div class="item-actions">
+
+                <button
+                    class="qty-btn"
+                    onclick="decreaseCart(${item.id})"
+                >
+                    −
+                </button>
+
+                <strong>
+                    ${item.quantity}
+                </strong>
+
+                <button
+                    class="qty-btn"
+                    onclick="increaseCart(${item.id})"
+                >
+                    +
+                </button>
+
+                <button
+                    class="btn-remove"
+                    onclick="removeFromCart(${item.id})"
+                >
+                    ✕
+                </button>
+
+            </div>
+
+        `;
+
+
+        container.appendChild(div);
+
+    });
+
+
+    totalLabel.textContent =
+        "$" + formatMoney(total);
+
+
+    countLabel.textContent =
+        count;
+
+
+    checkoutButton.disabled =
+        cart.length === 0;
+
+}
+
+
+function getCartTotal(){
+
+    return cart.reduce(
+        (sum,item) =>
+            sum + item.price * item.quantity,
+        0
+    );
+
+}
+
+
+/* =========================
+   PAGO / VENTA
+========================= */
+
+function openPayment(){
+
+    if(cart.length === 0){
+
+        alert("El carrito está vacío.");
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "payment-total"
+    ).textContent =
+        "$" + formatMoney(getCartTotal());
+
+
+    document.getElementById(
+        "payment-modal"
+    ).style.display = "flex";
+
+}
+
+
+function confirmSale(){
+
+    if(cart.length === 0){
+
+        closeModal("payment-modal");
+
+        return;
+
+    }
+
+
+    const total =
+        getCartTotal();
+
+
+    const paymentMethod =
+        document.getElementById(
+            "payment-method"
+        ).value;
+
+
+    const sale = {
+
+        id:Date.now(),
+
+        date:new Date().toISOString(),
+
+        status:"realizada",
+
+        paymentMethod:paymentMethod,
+
+        items:cart.map(item => ({
+
+            id:item.id,
+            code:item.code,
+            name:item.name,
+            price:item.price,
+            quantity:item.quantity,
+            subtotal:item.price * item.quantity
+
+        })),
+
+        total:total
+
+    };
+
+
+    sales.push(sale);
+
+
+    saveSales();
+
+
+    cart = [];
+
+    saveCart();
+
+    updateCartUI();
+
+    renderCatalog(
+        getFilteredProducts()
+    );
+
+
+    closeModal("payment-modal");
+
+
+    alert("¡Venta registrada correctamente!");
+
+}
+
+
+function cancelSale(id){
+
+    const sale =
+        sales.find(s => s.id === id);
+
+
+    if(!sale ||
+       sale.status === "anulada"){
+
+        return;
+
+    }
+
+
+    if(!confirm(
+        "¿Anular esta venta y devolver el stock?"
+    )){
+
+        return;
+
+    }
+
+
+    sale.status = "anulada";
+
+    sale.cancelledAt =
+        new Date().toISOString();
+
+
+    sale.items.forEach(item => {
+
+        const product =
+            products.find(
+                p => p.id === item.id
+            );
+
+
+        if(product){
+
+            product.stock += item.quantity;
+
+        }
+
+    });
+
+
+    saveProducts();
+    saveSales();
+
+
+    renderCatalog(
+        getFilteredProducts()
+    );
+
+    renderHistory();
+
+}
+
+
+/* =========================
+   HISTORIAL
+========================= */
+
+function openHistory(){
+
+    renderHistory();
+
+    document.getElementById(
+        "history-modal"
+    ).style.display = "flex";
+
+}
+
+
+function renderHistory(){
+
+    const container =
+        document.getElementById(
+            "sales-history"
+        );
+
+
+    container.innerHTML = "";
+
+
+    if(sales.length === 0){
+
+        container.innerHTML =
+            "<p>No hay ventas registradas.</p>";
+
+        return;
+
+    }
+
+
+    [...sales]
+    .reverse()
+    .forEach(sale => {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "sale";
+
+
+        const date =
+            new Date(sale.date)
+            .toLocaleString("es-AR");
+
+
+        const payment =
+            paymentName(
+                sale.paymentMethod
+            );
+
+
+        const itemsText =
+            sale.items
+            .map(item =>
+                `${item.name} × ${item.quantity}`
+            )
+            .join("<br>");
+
+
+        div.innerHTML = `
+
+            <div class="sale-row">
+
+                <div class="sale-info">
+
+                    <strong>
+                        Venta #${sale.id}
+                    </strong>
+
+                    <br>
+
+                    <small>
+                        ${date}
+                    </small>
+
+                    <br><br>
+
+                    ${itemsText}
+
+                    <br><br>
+
+                    <strong>
+                        Total:
+                        $${formatMoney(sale.total)}
+                    </strong>
+
+                    <br>
+
+                    <small>
+                        Pago: ${payment}
+                    </small>
+
+                </div>
+
+
+                <div>
+
+                    <div class="history-status
+                        ${sale.status === "anulada"
+                            ? "cancelled"
+                            : "completed"}">
+
+                        ${
+                            sale.status === "anulada"
+                            ? "ANULADA"
+                            : "REALIZADA"
+                        }
+
+                    </div>
+
+
+                    ${
+                        sale.status !== "anulada"
+                        ?
+                        `<button
+                            class="btn-remove"
+                            style="margin-top:8px"
+                            onclick="cancelSale(${sale.id})"
+                        >
+                            Anular
+                        </button>`
+                        :
+                        ""
+                    }
+
+                </div>
+
+            </div>
+
+        `;
+
+
+        container.appendChild(div);
+
+    });
+
+}
+
+
+/* =========================
+   ADMINISTRACIÓN
+========================= */
+
+function openAdmin(){
+
+    renderAdmin();
+
+    document.getElementById(
+        "admin-modal"
+    ).style.display = "flex";
+
+}
+
+
+function renderAdmin(){
+
+    const container =
+        document.getElementById(
+            "admin-products"
+        );
+
+
+    container.innerHTML = "";
+
+
+    products.forEach(product => {
+
+        const div =
+            document.createElement("div");
+
+        div.className =
+            "admin-product";
+
+
+        div.innerHTML = `
+
+            <div class="admin-row">
+
+                <div class="admin-info">
+
+                    <strong>
+                        ${escapeHTML(product.name)}
+                    </strong>
+
+                    <br>
+
+                    <small>
+                        Código: ${product.code}
+                    </small>
+
+                    <br>
+
+                    <small>
+                        Precio:
+                        $${formatMoney(product.price)}
+                        · Stock:
+                        ${product.stock}
+                    </small>
+
+                </div>
+
+
+                <button
+                    class="top-btn"
+                    onclick="openEditProduct(${product.id})"
+                >
+                    ✏️
+                </button>
+
+            </div>
+
+        `;
+
+
+        container.appendChild(div);
+
+    });
+
+}
+
+
+function openNewProduct(){
+
+    editingProductId = null;
+
+
+    document.getElementById(
+        "product-modal-title"
+    ).textContent =
+        "Nuevo producto";
+
+
+    document.getElementById(
+        "product-code"
+    ).value = "";
+
+
+    document.getElementById(
+        "product-name"
+    ).value = "";
+
+
+    document.getElementById(
+        "product-price"
+    ).value = "";
+
+
+    document.getElementById(
+        "product-stock"
+    ).value = "0";
+
+
+    document.getElementById(
+        "delete-product-btn"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "product-modal"
+    ).style.display = "flex";
+
+}
+
+
+function openNewProductFromAdmin(){
+
+    closeModal("admin-modal");
+
+    openNewProduct();
+
+}
+
+
+function openEditProduct(id){
+
+    const product =
+        products.find(p => p.id === id);
+
+
+    if(!product) return;
+
+
+    editingProductId = id;
+
+
+    document.getElementById(
+        "product-modal-title"
+    ).textContent =
+        "Editar producto";
+
+
+    document.getElementById(
+        "product-code"
+    ).value =
+        product.code;
+
+
+    document.getElementById(
+        "product-name"
+    ).value =
+        product.name;
+
+
+    document.getElementById(
+        "product-price"
+    ).value =
+        product.price;
+
+
+    document.getElementById(
+        "product-stock"
+    ).value =
+        product.stock;
+
+
+    document.getElementById(
+        "delete-product-btn"
+    ).style.display = "block";
+
+
+    closeModal("admin-modal");
+
+
+    document.getElementById(
+        "product-modal"
+    ).style.display = "flex";
+
+}
+
+
+function saveProduct(){
+
+    const code =
+        document.getElementById(
+            "product-code"
+        ).value.trim();
+
+
+    const name =
+        document.getElementById(
+            "product-name"
+        ).value.trim();
+
+
+    const price =
+        Number(
+            document.getElementById(
+                "product-price"
+            ).value
+        );
+
+
+    const stock =
+        Number(
+            document.getElementById(
+                "product-stock"
+            ).value
+        );
+
+
+    if(!code || !name){
+
+        alert("Completá código y nombre.");
+
+        return;
+
+    }
+
+
+    if(price < 0 || stock < 0){
+
+        alert("Precio y stock no pueden ser negativos.");
+
+        return;
+
+    }
+
+
+    const duplicate =
+        products.find(
+            p =>
+                String(p.code) === code &&
+                p.id !== editingProductId
+        );
+
+
+    if(duplicate){
+
+        alert("Ya existe un producto con ese código.");
+
+        return;
+
+    }
+
+
+    if(editingProductId === null){
+
+        products.push({
+
+            id:Date.now(),
+
+            code:code,
+
+            name:name,
+
+            price:price,
+
+            stock:stock
+
+        });
+
+    }else{
+
+        const product =
+            products.find(
+                p => p.id === editingProductId
+            );
+
+
+        if(!product) return;
+
+
+        product.code = code;
+        product.name = name;
+        product.price = price;
+        product.stock = stock;
+
+
+        const cartItem =
+            cart.find(
+                item => item.id === product.id
+            );
+
+
+        if(cartItem){
+
+            cartItem.code = code;
+            cartItem.name = name;
+            cartItem.price = price;
+
+            saveCart();
+
+        }
+
+    }
+
+
+    saveProducts();
+
+
+    closeModal("product-modal");
+
+
+    renderCatalog(
+        getFilteredProducts()
+    );
+
+}
+
+
+function deleteProduct(){
+
+    if(editingProductId === null)
+        return;
+
+
+    const inCart =
+        cart.some(
+            item => item.id === editingProductId
+        );
+
+
+    if(inCart){
+
+        alert(
+            "No podés eliminar un producto que está en el carrito."
+        );
+
+        return;
+
+    }
+
+
+    if(!confirm(
+        "¿Eliminar este producto?"
+    )){
+
+        return;
+
+    }
+
+
+    products =
+        products.filter(
+            p => p.id !== editingProductId
+        );
+
+
+    saveProducts();
+
+
+    closeModal("product-modal");
+
+
+    renderCatalog(
+        getFilteredProducts()
+    );
+
+}
+
+
+/* =========================
+   UTILIDADES
+========================= */
+
+function closeModal(id){
+
+    document.getElementById(id).style.display =
+        "none";
+
+}
+
+
+function getFilteredProducts(){
+
+    const query =
+        document
+        .getElementById("search")
+        .value
+        .toLowerCase()
+        .trim();
+
+
+    if(!query)
+        return products;
+
+
+    return products.filter(product =>
+
+        product.name
+        .toLowerCase()
+        .includes(query)
+
+        ||
+
+        String(product.code)
+        .includes(query)
+
+    );
+
+}
+
+
+function formatMoney(value){
+
+    return Number(value).toLocaleString(
+        "es-AR"
+    );
+
+}
+
+
+function paymentName(method){
+
+    const names = {
+
+        efectivo:"Efectivo",
+
+        debito:"Débito",
+
+        credito:"Crédito",
+
+        transferencia:"Transferencia"
+
+    };
+
+
+    return names[method] || method || "Sin especificar";
+
+}
+
+
+function escapeHTML(text){
+
+    return String(text)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+
+}
+
+
+/* =========================
+   CARRITO MÓVIL
+========================= */
+
+function toggleCart(){
+
+    const cartElement =
+        document.getElementById("cart");
+
+    const arrow =
+        document.getElementById("cart-arrow");
+
+
+    cartElement.classList.toggle("expanded");
+
+
+    arrow.textContent =
+        cartElement.classList.contains("expanded")
+        ? "⌄"
+        : "⌃";
+
+}
+
+
+/* =========================
+   INICIO
+========================= */
+
+renderCatalog(products);
+
+updateCartUI();
 
 </script>
 
