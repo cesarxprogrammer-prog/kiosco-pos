@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Prueba de cámara</title>
+<title>Prueba de lector</title>
 
 <style>
 *{
@@ -17,10 +17,8 @@ body{
     color:#f1f1f1;
     font-family:Arial,sans-serif;
     min-height:100vh;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
     padding:20px;
+    text-align:center;
 }
 
 h1{
@@ -30,9 +28,10 @@ h1{
 video{
     width:100%;
     max-width:500px;
+    margin:20px auto;
+    display:block;
     border-radius:12px;
     background:#000;
-    margin:20px 0;
 }
 
 button{
@@ -46,31 +45,48 @@ button{
     font-size:18px;
 }
 
+#result{
+    margin-top:20px;
+    font-size:24px;
+    font-weight:bold;
+}
+
 #status{
-    margin-top:15px;
+    margin-top:10px;
     color:#aaa;
-    text-align:center;
 }
 </style>
 </head>
 
 <body>
 
-<h1>📷 Prueba de cámara</h1>
+<h1>📷 Lector de código</h1>
 
-<video id="video" autoplay playsinline></video>
+<video
+    id="video"
+    autoplay
+    playsinline>
+</video>
 
-<button onclick="iniciarCamara()">
-    Iniciar cámara
+<button onclick="iniciarScanner()">
+    Iniciar lector
 </button>
 
 <div id="status">
-    Cámara detenida
+    Lector detenido
 </div>
+
+<div id="result">
+    Código: —
+</div>
+
 
 <script>
 
-async function iniciarCamara(){
+let stream = null;
+let scannerActivo = false;
+
+async function iniciarScanner(){
 
     const video =
         document.getElementById("video");
@@ -78,9 +94,23 @@ async function iniciarCamara(){
     const status =
         document.getElementById("status");
 
+    const result =
+        document.getElementById("result");
+
+
+    if(!("BarcodeDetector" in window)){
+
+        status.textContent =
+            "❌ Este navegador no soporta BarcodeDetector.";
+
+        return;
+
+    }
+
+
     try{
 
-        const stream =
+        stream =
             await navigator.mediaDevices.getUserMedia({
 
                 video:{
@@ -91,20 +121,101 @@ async function iniciarCamara(){
 
             });
 
+
         video.srcObject = stream;
 
+        scannerActivo = true;
+
         status.textContent =
-            "✅ Cámara funcionando";
+            "🟢 Buscando código...";
+
+        buscarCodigo();
+
 
     }catch(error){
 
         console.error(error);
 
         status.textContent =
-            "❌ No se pudo iniciar la cámara: " +
-            error.name;
+            "❌ Error: " + error.name;
 
     }
+
+}
+
+
+async function buscarCodigo(){
+
+    if(!scannerActivo)
+        return;
+
+
+    const video =
+        document.getElementById("video");
+
+
+    const detector =
+        new BarcodeDetector({
+
+            formats:[
+                "ean_13",
+                "ean_8",
+                "upc_a",
+                "upc_e",
+                "code_128"
+            ]
+
+        });
+
+
+    try{
+
+        const barcodes =
+            await detector.detect(video);
+
+
+        if(barcodes.length > 0){
+
+            const codigo =
+                barcodes[0].rawValue;
+
+
+            document.getElementById(
+                "result"
+            ).textContent =
+                "Código: " + codigo;
+
+
+            document.getElementById(
+                "status"
+            ).textContent =
+                "✅ Código detectado";
+
+
+            scannerActivo = false;
+
+
+            if(stream){
+
+                stream
+                    .getTracks()
+                    .forEach(track => track.stop());
+
+            }
+
+
+            return;
+
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+    }
+
+
+    requestAnimationFrame(buscarCodigo);
 
 }
 
