@@ -1414,16 +1414,40 @@ function saveSales() {
 
 function exportData() {
 
+    /*
+       Creamos una copia de las ventas
+       únicamente para exportar.
+    */
+    const exportedSales =
+        sales.map(sale => ({
+
+            ...sale,
+
+            items: sale.items.map(item => {
+
+                const {
+                    subtotal,
+                    ...itemWithoutSubtotal
+                } = item;
+
+                return itemWithoutSubtotal;
+
+            })
+
+        }));
+
+
     const data = {
 
         products: products,
 
-        sales: sales,
+        sales: exportedSales,
 
         exportDate:
             new Date().toISOString()
 
     };
+
 
     const json =
         JSON.stringify(
@@ -1431,6 +1455,7 @@ function exportData() {
             null,
             2
         );
+
 
     const blob =
         new Blob(
@@ -1440,23 +1465,30 @@ function exportData() {
             }
         );
 
+
     const url =
         URL.createObjectURL(blob);
 
+
     const link =
         document.createElement("a");
+
 
     const date =
         new Date()
             .toISOString()
             .slice(0, 10);
 
-    link.href = url;
+
+    link.href =
+        url;
+
 
     link.download =
         "kiosco_backup_" +
         date +
         ".json";
+
 
     document.body.appendChild(link);
 
@@ -1465,6 +1497,7 @@ function exportData() {
     document.body.removeChild(link);
 
     URL.revokeObjectURL(url);
+
 
     alert(
         "Datos exportados correctamente."
