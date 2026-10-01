@@ -327,6 +327,12 @@ body {
     color: white;
 }
 
+.btn-primary:disabled {
+    background: #555;
+    color: #aaa;
+    cursor: not-allowed;
+}
+
 .btn-secondary {
     background: #444;
     color: #f1f1f1;
@@ -405,6 +411,50 @@ body {
 
 .payment-change-result.invalid {
     color: #ff5c6c;
+}
+
+.cash-bills {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+    margin-top: 8px;
+}
+
+.cash-bill {
+    border: 0;
+    background: #333;
+    color: #f1f1f1;
+    border-radius: 7px;
+    padding: 11px 5px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.cash-bill:active {
+    background: #555;
+    transform: scale(.97);
+}
+
+.cash-controls {
+    display: flex;
+    gap: 7px;
+    margin-top: 8px;
+}
+
+.cash-control {
+    flex: 1;
+    border: 0;
+    border-radius: 7px;
+    padding: 9px;
+    background: #444;
+    color: #f1f1f1;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.cash-control.danger {
+    background: #dc3545;
 }
 
 /* SCANNER */
@@ -532,6 +582,10 @@ body {
 
     .weight-option {
         padding: 5px 6px;
+    }
+
+    .cash-bills {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 </style>
@@ -919,6 +973,10 @@ body {
 
 </div>
 
+<!-- =====================================================
+     PAGO
+===================================================== -->
+
 <div
     id="payment-modal"
     class="modal-bg"
@@ -989,9 +1047,89 @@ body {
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="Ingresá el monto recibido"
+                    placeholder="$0"
                     oninput="calculateChange()"
                 >
+
+                <div class="cash-bills">
+
+                    <button
+                        type="button"
+                        class="cash-bill"
+                        onclick="addCashBill(100)"
+                    >
+                        $100
+                    </button>
+
+                    <button
+                        type="button"
+                        class="cash-bill"
+                        onclick="addCashBill(200)"
+                    >
+                        $200
+                    </button>
+
+                    <button
+                        type="button"
+                        class="cash-bill"
+                        onclick="addCashBill(500)"
+                    >
+                        $500
+                    </button>
+
+                    <button
+                        type="button"
+                        class="cash-bill"
+                        onclick="addCashBill(1000)"
+                    >
+                        $1.000
+                    </button>
+
+                    <button
+                        type="button"
+                        class="cash-bill"
+                        onclick="addCashBill(2000)"
+                    >
+                        $2.000
+                    </button>
+
+                    <button
+                        type="button"
+                        class="cash-bill"
+                        onclick="addCashBill(10000)"
+                    >
+                        $10.000
+                    </button>
+
+                    <button
+                        type="button"
+                        class="cash-bill"
+                        onclick="addCashBill(20000)"
+                    >
+                        $20.000
+                    </button>
+
+                </div>
+
+                <div class="cash-controls">
+
+                    <button
+                        type="button"
+                        class="cash-control"
+                        onclick="removeLastCashBill()"
+                    >
+                        ↩ Borrar último
+                    </button>
+
+                    <button
+                        type="button"
+                        class="cash-control danger"
+                        onclick="clearCashReceived()"
+                    >
+                        🗑 Limpiar
+                    </button>
+
+                </div>
 
             </div>
 
@@ -1014,8 +1152,10 @@ body {
             </button>
 
             <button
+                id="confirm-sale-btn"
                 class="btn-primary"
                 onclick="confirmSale()"
+                disabled
             >
                 Confirmar venta
             </button>
@@ -1229,10 +1369,6 @@ async function openScanner(mode = "sale") {
             });
 
 
-        /*
-         * SOLICITAR LA MAYOR RESOLUCIÓN POSIBLE
-         */
-
         scannerStream =
             await navigator.mediaDevices.getUserMedia({
 
@@ -1266,10 +1402,6 @@ async function openScanner(mode = "sale") {
         video.srcObject =
             scannerStream;
 
-
-        /*
-         * MOSTRAR RESOLUCIÓN REAL
-         */
 
         const track =
             scannerStream.getVideoTracks()[0];
@@ -2646,6 +2778,9 @@ function getCartTotal() {
    PAGO / VENTA
 ========================================================= */
 
+let cashBillHistory = [];
+
+
 function openPayment() {
 
     if (cart.length === 0) {
@@ -2672,6 +2807,8 @@ function openPayment() {
     ).value =
         "efectivo";
 
+    cashBillHistory = [];
+
     document.getElementById(
         "cash-received"
     ).value = "";
@@ -2684,12 +2821,17 @@ function openPayment() {
     document.getElementById(
         "cash-change"
     ).className =
-        "payment-change-result";
+        "payment-change-result invalid";
 
     document.getElementById(
         "cash-payment-box"
     ).style.display =
         "block";
+
+    document.getElementById(
+        "confirm-sale-btn"
+    ).disabled =
+        true;
 
     document.getElementById(
         "payment-modal"
@@ -2699,25 +2841,100 @@ function openPayment() {
 }
 
 
+function addCashBill(amount) {
+
+    const input =
+        document.getElementById(
+            "cash-received"
+        );
+
+    const current =
+        Number(input.value) || 0;
+
+    const newAmount =
+        current + amount;
+
+    cashBillHistory.push(amount);
+
+    input.value =
+        newAmount;
+
+    calculateChange();
+
+}
+
+
+function removeLastCashBill() {
+
+    if (cashBillHistory.length === 0) {
+        return;
+    }
+
+    const lastAmount =
+        cashBillHistory.pop();
+
+    const input =
+        document.getElementById(
+            "cash-received"
+        );
+
+    const current =
+        Number(input.value) || 0;
+
+    const newAmount =
+        Math.max(
+            0,
+            current - lastAmount
+        );
+
+    input.value =
+        newAmount;
+
+    calculateChange();
+
+}
+
+
+function clearCashReceived() {
+
+    cashBillHistory = [];
+
+    document.getElementById(
+        "cash-received"
+    ).value = "";
+
+    calculateChange();
+
+}
+
+
 function calculateChange() {
 
     const total =
         getCartTotal();
 
-    const received =
-        Number(
-            document.getElementById(
-                "cash-received"
-            ).value
+    const input =
+        document.getElementById(
+            "cash-received"
         );
+
+    const received =
+        Number(input.value);
 
     const changeLabel =
         document.getElementById(
             "cash-change"
         );
 
+    const confirmButton =
+        document.getElementById(
+            "confirm-sale-btn"
+        );
+
 
     if (
+        input.value.trim() === ""
+        ||
         !Number.isFinite(received)
         ||
         received < total
@@ -2733,10 +2950,18 @@ function calculateChange() {
 
         changeLabel.textContent =
             "Faltan: $" +
-            formatMoney(missing);
+            formatMoney(
+                Math.max(
+                    0,
+                    missing
+                )
+            );
 
         changeLabel.className =
             "payment-change-result invalid";
+
+        confirmButton.disabled =
+            true;
 
         return false;
 
@@ -2744,7 +2969,13 @@ function calculateChange() {
 
 
     const change =
-        received - total;
+        Math.round(
+            (
+                received -
+                total
+            ) * 100
+        ) / 100;
+
 
     changeLabel.textContent =
         "Vuelto: $" +
@@ -2752,6 +2983,9 @@ function calculateChange() {
 
     changeLabel.className =
         "payment-change-result valid";
+
+    confirmButton.disabled =
+        false;
 
     return true;
 
@@ -2770,16 +3004,26 @@ function updatePaymentMethod() {
             "cash-payment-box"
         );
 
+    const confirmButton =
+        document.getElementById(
+            "confirm-sale-btn"
+        );
+
 
     if (method === "efectivo") {
 
         cashBox.style.display =
             "block";
 
+        calculateChange();
+
     } else {
 
         cashBox.style.display =
             "none";
+
+        confirmButton.disabled =
+            false;
 
     }
 
@@ -2838,8 +3082,12 @@ function confirmSale() {
             );
 
         cashChange =
-            cashReceived -
-            total;
+            Math.round(
+                (
+                    cashReceived -
+                    total
+                ) * 100
+            ) / 100;
 
     }
 
@@ -2969,6 +3217,8 @@ function confirmSale() {
     closeModal(
         "payment-modal"
     );
+
+    cashBillHistory = [];
 
     alert(
         "¡Venta registrada correctamente!"
