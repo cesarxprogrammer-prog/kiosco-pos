@@ -389,8 +389,6 @@ body {
     margin-bottom: 12px;
 }
 
-/* PAGO EN EFECTIVO */
-
 .payment-change {
     background: #292929;
     padding: 12px;
@@ -467,6 +465,15 @@ body {
     margin-bottom: 12px;
 }
 
+.scanner-product-message {
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    color: #20c997;
+    min-height: 30px;
+    margin-bottom: 10px;
+}
+
 .scanner-status {
     text-align: center;
     color: #aaa;
@@ -479,8 +486,6 @@ body {
     font-weight: bold;
     margin-bottom: 5px;
 }
-
-/* CÓDIGO PRODUCTO */
 
 .code-input-row {
     display: flex;
@@ -504,8 +509,6 @@ body {
 .code-status.duplicate {
     color: #ff5c6c;
 }
-
-/* MÓVIL */
 
 @media (max-width: 700px) {
 
@@ -711,6 +714,11 @@ body {
         <h2>
             📷 Escanear producto
         </h2>
+
+        <div
+            id="scanner-product-message"
+            class="scanner-product-message"
+        ></div>
 
         <video
             id="scanner-video"
@@ -972,10 +980,6 @@ body {
     </div>
 
 </div>
-
-<!-- =====================================================
-     PAGO
-===================================================== -->
 
 <div
     id="payment-modal"
@@ -1305,6 +1309,60 @@ let lastDetectedCode = null;
 let scannerCooldown = false;
 
 
+/* =========================================================
+   SONIDO DEL SCANNER
+========================================================= */
+
+function playScanSound() {
+
+    const AudioContext =
+        window.AudioContext ||
+        window.webkitAudioContext;
+
+    if (!AudioContext) {
+        return;
+    }
+
+    const audioContext =
+        new AudioContext();
+
+    const oscillator =
+        audioContext.createOscillator();
+
+    const gain =
+        audioContext.createGain();
+
+    oscillator.type =
+        "sine";
+
+    oscillator.frequency.value =
+        1000;
+
+    gain.gain.setValueAtTime(
+        0.15,
+        audioContext.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioContext.currentTime + 0.12
+    );
+
+    oscillator.connect(gain);
+
+    gain.connect(
+        audioContext.destination
+    );
+
+    oscillator.start();
+
+    oscillator.stop(
+        audioContext.currentTime + 0.12
+    );
+
+}
+
+
 async function openScanner(mode = "sale") {
 
     scannerMode = mode;
@@ -1321,10 +1379,18 @@ async function openScanner(mode = "sale") {
     const codeLabel =
         document.getElementById("scanner-code");
 
-    const title =
-        document.querySelector("#scanner-modal h2");
+    const productMessage =
+        document.getElementById(
+            "scanner-product-message"
+        );
 
-    modal.style.display = "flex";
+    const title =
+        document.querySelector(
+            "#scanner-modal h2"
+        );
+
+    modal.style.display =
+        "flex";
 
     if (scannerMode === "product") {
 
@@ -1340,6 +1406,9 @@ async function openScanner(mode = "sale") {
 
     codeLabel.textContent =
         "Código: —";
+
+    productMessage.textContent =
+        "";
 
     status.textContent =
         "Iniciando cámara...";
@@ -1458,7 +1527,9 @@ async function buscarCodigo() {
     }
 
     const video =
-        document.getElementById("scanner-video");
+        document.getElementById(
+            "scanner-video"
+        );
 
     try {
 
@@ -1584,24 +1655,36 @@ async function buscarCodigo() {
 
                 addToCart(product.id);
 
+                playScanSound();
+
+                document.getElementById(
+                    "scanner-product-message"
+                ).textContent =
+                    "✓ " +
+                    product.name +
+                    " agregado";
+
                 document.getElementById(
                     "scanner-status"
                 ).textContent =
-                    "✅ " +
-                    product.name +
-                    " agregado. Buscando otro...";
+                    "⏳ Esperando...";
+
             }
 
 
             /*
-             * Espera un segundo antes de
-             * aceptar otro código.
+             * Durante un segundo no se acepta
+             * ningún otro código.
              */
 
             setTimeout(() => {
 
                 scannerCooldown = false;
                 lastDetectedCode = null;
+
+                document.getElementById(
+                    "scanner-product-message"
+                ).textContent = "";
 
                 if (scannerActive) {
 
@@ -1666,6 +1749,10 @@ function closeScanner() {
     detenerScanner();
 
     scannerMode = "sale";
+
+    document.getElementById(
+        "scanner-product-message"
+    ).textContent = "";
 
     document.getElementById(
         "scanner-modal"
@@ -3133,10 +3220,6 @@ function confirmSale() {
     let cashReceived = null;
     let cashChange = null;
 
-
-    /*
-     * VALIDACIÓN DEL EFECTIVO
-     */
 
     if (
         paymentMethod ===
