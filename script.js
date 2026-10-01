@@ -10,7 +10,8 @@ const defaultProducts = [
         name: "Alfajor Triple",
         price: 800,
         stock: 20,
-        saleType: "unit"
+        saleType: "unit",
+        group: "barcode"
     },
 
     {
@@ -19,7 +20,8 @@ const defaultProducts = [
         name: "Gaseosa Cola 500ml",
         price: 1200,
         stock: 20,
-        saleType: "unit"
+        saleType: "unit",
+        group: "barcode"
     },
 
     {
@@ -28,7 +30,8 @@ const defaultProducts = [
         name: "Agua Mineral 500ml",
         price: 900,
         stock: 20,
-        saleType: "unit"
+        saleType: "unit",
+        group: "barcode"
     },
 
     {
@@ -37,7 +40,8 @@ const defaultProducts = [
         name: "Chicles de Menta",
         price: 300,
         stock: 20,
-        saleType: "unit"
+        saleType: "unit",
+        group: "barcode"
     },
 
     {
@@ -46,24 +50,36 @@ const defaultProducts = [
         name: "Papas Fritas Bolsa",
         price: 1500,
         stock: 20,
-        saleType: "unit"
+        saleType: "unit",
+        group: "barcode"
     }
 
 ];
+
 
 let products =
     JSON.parse(localStorage.getItem("products"))
     || defaultProducts;
 
+
 let cart =
     JSON.parse(localStorage.getItem("cart"))
     || [];
+
 
 let sales =
     JSON.parse(localStorage.getItem("sales"))
     || [];
 
+
 let editingProductId = null;
+
+
+/* =========================================================
+   GRUPO ACTUAL DEL CATÁLOGO
+========================================================= */
+
+let selectedProductGroup = "weight";
 
 
 /* =========================================================
@@ -76,15 +92,39 @@ products.forEach(product => {
         product.saleType = "unit";
     }
 
+
+    /*
+       Productos anteriores:
+
+       weight → weight
+       unit   → barcode
+
+       De esta manera los productos existentes
+       no se rompen.
+    */
+
+    if (!product.group) {
+
+        product.group =
+            product.saleType === "weight"
+                ? "weight"
+                : "barcode";
+
+    }
+
+
     if (
         product.saleType === "weight"
         &&
         !product.priceUnit
     ) {
+
         product.priceUnit = 1000;
+
     }
 
 });
+
 
 saveProducts();
 
@@ -100,21 +140,42 @@ cart.forEach(item => {
             p => p.id === item.id
         );
 
+
     if (!product) return;
 
+
     if (!item.saleType) {
+
         item.saleType =
             product.saleType || "unit";
+
     }
+
+
+    if (!item.group) {
+
+        item.group =
+            product.group ||
+            (
+                item.saleType === "weight"
+                    ? "weight"
+                    : "barcode"
+            );
+
+    }
+
 
     if (item.saleType === "weight") {
 
-        if (typeof item.weight !== "number") {
+        if (
+            typeof item.weight !== "number"
+        ) {
 
             item.weight =
                 Number(item.quantity) || 0;
 
         }
+
 
         item.quantity =
             item.weight;
@@ -122,6 +183,7 @@ cart.forEach(item => {
     }
 
 });
+
 
 saveCart();
 
@@ -149,34 +211,43 @@ function playScanSound() {
         window.AudioContext ||
         window.webkitAudioContext;
 
+
     if (!AudioContext) {
         return;
     }
 
+
     const audioContext =
         new AudioContext();
+
 
     const oscillator =
         audioContext.createOscillator();
 
+
     const gain =
         audioContext.createGain();
+
 
     oscillator.type =
         "sine";
 
+
     oscillator.frequency.value =
         1000;
+
 
     gain.gain.setValueAtTime(
         0.15,
         audioContext.currentTime
     );
 
+
     gain.gain.exponentialRampToValueAtTime(
         0.001,
         audioContext.currentTime + 0.12
     );
+
 
     oscillator.connect(gain);
 
@@ -184,7 +255,9 @@ function playScanSound() {
         audioContext.destination
     );
 
+
     oscillator.start();
+
 
     oscillator.stop(
         audioContext.currentTime + 0.12
@@ -201,30 +274,46 @@ async function openScanner(mode = "sale") {
 
     scannerMode = mode;
 
+
     const modal =
-        document.getElementById("scanner-modal");
+        document.getElementById(
+            "scanner-modal"
+        );
+
 
     const video =
-        document.getElementById("scanner-video");
+        document.getElementById(
+            "scanner-video"
+        );
+
 
     const status =
-        document.getElementById("scanner-status");
+        document.getElementById(
+            "scanner-status"
+        );
+
 
     const codeLabel =
-        document.getElementById("scanner-code");
+        document.getElementById(
+            "scanner-code"
+        );
+
 
     const productMessage =
         document.getElementById(
             "scanner-product-message"
         );
 
+
     const title =
         document.querySelector(
             "#scanner-modal h2"
         );
 
+
     modal.style.display =
         "flex";
+
 
     if (scannerMode === "product") {
 
@@ -238,18 +327,23 @@ async function openScanner(mode = "sale") {
 
     }
 
+
     codeLabel.textContent =
         "Código: —";
+
 
     productMessage.textContent =
         "";
 
+
     status.textContent =
         "Iniciando cámara...";
+
 
     scannerActive = false;
     scannerCooldown = false;
     lastDetectedCode = null;
+
 
     if (!("BarcodeDetector" in window)) {
 
@@ -259,6 +353,7 @@ async function openScanner(mode = "sale") {
         return;
 
     }
+
 
     try {
 
@@ -313,8 +408,10 @@ async function openScanner(mode = "sale") {
         const track =
             scannerStream.getVideoTracks()[0];
 
+
         const settings =
             track.getSettings();
+
 
         console.log(
             "Resolución real de cámara:",
@@ -325,6 +422,7 @@ async function openScanner(mode = "sale") {
 
 
         scannerActive = true;
+
 
         status.textContent =
             scannerMode === "sale"
@@ -337,6 +435,7 @@ async function openScanner(mode = "sale") {
     } catch (error) {
 
         console.error(error);
+
 
         status.textContent =
             "❌ No se pudo iniciar la cámara: "
@@ -364,15 +463,18 @@ async function buscarCodigo() {
         return;
     }
 
+
     const video =
         document.getElementById(
             "scanner-video"
         );
 
+
     try {
 
         const barcodes =
             await barcodeDetector.detect(video);
+
 
         if (
             barcodes.length > 0
@@ -400,6 +502,7 @@ async function buscarCodigo() {
             lastDetectedCode =
                 codigo;
 
+
             scannerCooldown = true;
 
 
@@ -419,23 +522,28 @@ async function buscarCodigo() {
 
                 detenerScanner();
 
+
                 document.getElementById(
                     "product-code"
                 ).value =
                     codigo;
 
+
                 validateProductCode();
+
 
                 document.getElementById(
                     "scanner-status"
                 ).textContent =
                     "✅ Código leído";
 
+
                 setTimeout(() => {
 
                     closeScanner();
 
                 }, 500);
+
 
                 return;
 
@@ -445,6 +553,14 @@ async function buscarCodigo() {
             /* =========================================
                MODO VENTA
             ========================================= */
+
+            /*
+               El scanner busca por código en TODOS
+               los grupos.
+
+               No importa qué grupo esté seleccionado
+               en el catálogo.
+            */
 
             const product =
                 products.find(
@@ -460,6 +576,7 @@ async function buscarCodigo() {
                     "scanner-status"
                 ).textContent =
                     "❌ Producto no encontrado";
+
 
                 alert(
                     "No existe un producto con el código "
@@ -477,6 +594,7 @@ async function buscarCodigo() {
                 ).textContent =
                     "❌ Producto sin stock";
 
+
                 alert(
                     product.name +
                     " no tiene stock disponible."
@@ -488,7 +606,9 @@ async function buscarCodigo() {
 
                 addToCart(product.id);
 
+
                 playScanSound();
+
 
                 document.getElementById(
                     "scanner-product-message"
@@ -496,6 +616,7 @@ async function buscarCodigo() {
                     "✓ " +
                     product.name +
                     " agregado";
+
 
                 document.getElementById(
                     "scanner-status"
@@ -510,9 +631,11 @@ async function buscarCodigo() {
                 scannerCooldown = false;
                 lastDetectedCode = null;
 
+
                 document.getElementById(
                     "scanner-product-message"
                 ).textContent = "";
+
 
                 if (scannerActive) {
 
@@ -556,20 +679,24 @@ function detenerScanner() {
     scannerCooldown = false;
     lastDetectedCode = null;
 
+
     if (scannerStream) {
 
         scannerStream
             .getTracks()
             .forEach(track => track.stop());
 
+
         scannerStream = null;
 
     }
+
 
     const video =
         document.getElementById(
             "scanner-video"
         );
+
 
     video.srcObject = null;
 
@@ -580,11 +707,14 @@ function closeScanner() {
 
     detenerScanner();
 
+
     scannerMode = "sale";
+
 
     document.getElementById(
         "scanner-product-message"
     ).textContent = "";
+
 
     document.getElementById(
         "scanner-modal"
@@ -646,6 +776,7 @@ function exportData() {
                     ...itemWithoutSubtotal
                 } = item;
 
+
                 return itemWithoutSubtotal;
 
             })
@@ -699,6 +830,7 @@ function exportData() {
     link.href =
         url;
 
+
     link.download =
         "kiosco_backup_" +
         date +
@@ -707,9 +839,12 @@ function exportData() {
 
     document.body.appendChild(link);
 
+
     link.click();
 
+
     document.body.removeChild(link);
+
 
     URL.revokeObjectURL(url);
 
@@ -740,6 +875,7 @@ if (
                 p => p.id === item.id
             );
 
+
         if (product) {
 
             if (
@@ -752,6 +888,7 @@ if (
                         item.quantity ??
                         0
                     );
+
 
                 product.stock =
                     Math.max(
@@ -778,11 +915,56 @@ if (
 
     });
 
+
     saveProducts();
+
 
     localStorage.setItem(
         "cartStockReserved",
         "true"
+    );
+
+}
+
+
+/* =========================================================
+   GRUPOS DEL CATÁLOGO
+========================================================= */
+
+function selectProductGroup(group) {
+
+    selectedProductGroup =
+        group;
+
+
+    document
+        .querySelectorAll(".group-btn")
+        .forEach(button => {
+
+            button.classList.remove(
+                "active"
+            );
+
+        });
+
+
+    const selectedButton =
+        document.getElementById(
+            "group-" + group
+        );
+
+
+    if (selectedButton) {
+
+        selectedButton.classList.add(
+            "active"
+        );
+
+    }
+
+
+    renderCatalog(
+        getFilteredProducts()
     );
 
 }
@@ -799,15 +981,19 @@ function renderCatalog(list) {
             "products"
         );
 
+
     container.innerHTML = "";
+
 
     list.forEach(product => {
 
         const card =
             document.createElement("div");
 
+
         card.className =
             "product-card";
+
 
         if (product.stock <= 0) {
 
@@ -817,10 +1003,15 @@ function renderCatalog(list) {
 
         }
 
+
         card.onclick = () => {
 
             if (product.stock > 0) {
-                addToCart(product.id);
+
+                addToCart(
+                    product.id
+                );
+
             }
 
         };
@@ -828,12 +1019,15 @@ function renderCatalog(list) {
 
         let stockText;
 
+
         if (product.stock <= 0) {
 
             stockText =
                 "Sin stock";
 
-        } else if (
+        }
+
+        else if (
             product.saleType === "weight"
         ) {
 
@@ -842,7 +1036,9 @@ function renderCatalog(list) {
                     product.stock
                 )}`;
 
-        } else {
+        }
+
+        else {
 
             stockText =
                 `Stock: ${product.stock}`;
@@ -852,19 +1048,25 @@ function renderCatalog(list) {
 
         let priceText;
 
-        if (product.saleType === "weight") {
+
+        if (
+            product.saleType === "weight"
+        ) {
 
             const unit =
                 Number(product.priceUnit) === 100
                     ? "100 g"
                     : "1 kg";
 
+
             priceText =
                 `$${formatMoney(
                     product.price
                 )} / ${unit}`;
 
-        } else {
+        }
+
+        else {
 
             priceText =
                 `$${formatMoney(
@@ -896,6 +1098,7 @@ function renderCatalog(list) {
 
         `;
 
+
         container.appendChild(card);
 
     });
@@ -905,28 +1108,9 @@ function renderCatalog(list) {
 
 function filterProducts() {
 
-    const query =
-        document
-            .getElementById("search")
-            .value
-            .toLowerCase()
-            .trim();
-
-    const filtered =
-        products.filter(product =>
-
-            product.name
-                .toLowerCase()
-                .includes(query)
-
-            ||
-
-            String(product.code)
-                .includes(query)
-
-        );
-
-    renderCatalog(filtered);
+    renderCatalog(
+        getFilteredProducts()
+    );
 
 }
 
@@ -941,6 +1125,7 @@ function addToCart(id) {
         products.find(
             p => p.id === id
         );
+
 
     if (
         !product
@@ -957,23 +1142,35 @@ function addToCart(id) {
     }
 
 
-    if (product.saleType === "weight") {
+    /* =========================================
+       PRODUCTO POR PESO
+    ========================================= */
+
+    if (
+        product.saleType === "weight"
+    ) {
 
         const existing =
             cart.find(
                 item => item.id === id
             );
 
+
         if (existing) {
             return;
         }
+
 
         const defaultWeight =
             Number(product.priceUnit) === 100
                 ? 100
                 : 1000;
 
-        if (product.stock < defaultWeight) {
+
+        if (
+            product.stock <
+            defaultWeight
+        ) {
 
             alert(
                 "No hay suficiente stock para "
@@ -986,8 +1183,10 @@ function addToCart(id) {
 
         }
 
+
         product.stock -=
             defaultWeight;
+
 
         cart.push({
 
@@ -1001,42 +1200,59 @@ function addToCart(id) {
 
             saleType: "weight",
 
+            group:
+                product.group || "weight",
+
             priceUnit:
                 Number(product.priceUnit)
                 || 1000,
 
-            weight: defaultWeight,
+            weight:
+                defaultWeight,
 
-            quantity: defaultWeight
+            quantity:
+                defaultWeight
 
         });
 
+
         saveProducts();
         saveCart();
+
 
         renderCatalog(
             getFilteredProducts()
         );
 
+
         updateCartUI();
+
 
         return;
 
     }
 
 
+    /* =========================================
+       PRODUCTO POR UNIDAD
+    ========================================= */
+
     const existing =
         cart.find(
             item => item.id === id
         );
 
+
     product.stock -= 1;
+
 
     if (existing) {
 
         existing.quantity += 1;
 
-    } else {
+    }
+
+    else {
 
         cart.push({
 
@@ -1050,18 +1266,24 @@ function addToCart(id) {
 
             saleType: "unit",
 
+            group:
+                product.group || "barcode",
+
             quantity: 1
 
         });
 
     }
 
+
     saveProducts();
     saveCart();
+
 
     renderCatalog(
         getFilteredProducts()
     );
+
 
     updateCartUI();
 
@@ -1079,13 +1301,17 @@ function increaseCart(id) {
             p => p.id === id
         );
 
+
     if (
         product
         &&
         product.saleType === "weight"
     ) {
+
         return;
+
     }
+
 
     addToCart(id);
 
@@ -1099,12 +1325,15 @@ function decreaseCart(id) {
             i => i.id === id
         );
 
+
     if (!item) return;
+
 
     const product =
         products.find(
             p => p.id === id
         );
+
 
     if (!product) return;
 
@@ -1114,13 +1343,17 @@ function decreaseCart(id) {
         ||
         item.saleType === "weight"
     ) {
+
         return;
+
     }
 
 
     product.stock += 1;
 
+
     item.quantity -= 1;
+
 
     if (item.quantity <= 0) {
 
@@ -1131,12 +1364,15 @@ function decreaseCart(id) {
 
     }
 
+
     saveProducts();
     saveCart();
+
 
     renderCatalog(
         getFilteredProducts()
     );
+
 
     updateCartUI();
 
@@ -1154,37 +1390,50 @@ function changeCartWeight(id, value) {
             i => i.id === id
         );
 
+
     if (!item) return;
+
 
     const product =
         products.find(
             p => p.id === id
         );
 
+
     if (!product) return;
+
 
     if (
         product.saleType !== "weight"
     ) {
+
         return;
+
     }
+
 
     let newWeight =
         Number(value);
+
 
     if (
         !Number.isFinite(newWeight)
         ||
         newWeight <= 0
     ) {
+
         return;
+
     }
+
 
     newWeight =
         Math.floor(newWeight);
 
+
     const oldWeight =
         Number(item.weight) || 0;
+
 
     const difference =
         newWeight - oldWeight;
@@ -1201,11 +1450,14 @@ function changeCartWeight(id, value) {
                 "No hay suficiente stock disponible."
             );
 
+
             updateCartUI();
+
 
             return;
 
         }
+
 
         product.stock -=
             difference;
@@ -1224,15 +1476,19 @@ function changeCartWeight(id, value) {
     item.weight =
         newWeight;
 
+
     item.quantity =
         newWeight;
+
 
     saveProducts();
     saveCart();
 
+
     renderCatalog(
         getFilteredProducts()
     );
+
 
     updateCartUI();
 
@@ -1268,6 +1524,7 @@ function getWeightSuggestions(priceUnit) {
 
     }
 
+
     return [
         250,
         500,
@@ -1288,6 +1545,7 @@ function renderWeightSuggestions(
         getWeightSuggestions(
             priceUnit
         );
+
 
     return `
 
@@ -1336,12 +1594,15 @@ function removeFromCart(id) {
             i => i.id === id
         );
 
+
     if (!item) return;
+
 
     const product =
         products.find(
             p => p.id === id
         );
+
 
     if (product) {
 
@@ -1358,7 +1619,9 @@ function removeFromCart(id) {
                     0
                 );
 
-        } else {
+        }
+
+        else {
 
             product.stock +=
                 Number(item.quantity)
@@ -1368,17 +1631,21 @@ function removeFromCart(id) {
 
     }
 
+
     cart =
         cart.filter(
             i => i.id !== id
         );
 
+
     saveProducts();
     saveCart();
+
 
     renderCatalog(
         getFilteredProducts()
     );
+
 
     updateCartUI();
 
@@ -1398,6 +1665,7 @@ function clearCart() {
                 p => p.id === item.id
             );
 
+
         if (product) {
 
             if (
@@ -1413,7 +1681,9 @@ function clearCart() {
                         0
                     );
 
-            } else {
+            }
+
+            else {
 
                 product.stock +=
                     Number(item.quantity)
@@ -1425,14 +1695,18 @@ function clearCart() {
 
     });
 
+
     cart = [];
+
 
     saveProducts();
     saveCart();
 
+
     renderCatalog(
         getFilteredProducts()
     );
+
 
     updateCartUI();
 
@@ -1450,22 +1724,27 @@ function updateCartUI() {
             "cart-items"
         );
 
+
     const totalLabel =
         document.getElementById(
             "total-amount"
         );
+
 
     const countLabel =
         document.getElementById(
             "cart-count"
         );
 
+
     const checkoutButton =
         document.getElementById(
             "checkout-btn"
         );
 
+
     container.innerHTML = "";
+
 
     let total = 0;
 
@@ -1476,6 +1755,7 @@ function updateCartUI() {
             products.find(
                 p => p.id === item.id
             );
+
 
         const isWeight =
             item.saleType === "weight"
@@ -1499,6 +1779,7 @@ function updateCartUI() {
                     0
                 );
 
+
             const priceUnit =
                 Number(
                     item.priceUnit ??
@@ -1506,12 +1787,15 @@ function updateCartUI() {
                     1000
                 );
 
+
             subtotal =
                 weight *
                 Number(item.price) /
                 priceUnit;
 
-        } else {
+        }
+
+        else {
 
             subtotal =
                 Number(item.price) *
@@ -1526,6 +1810,7 @@ function updateCartUI() {
         const div =
             document.createElement("div");
 
+
         div.className =
             "cart-item";
 
@@ -1539,12 +1824,14 @@ function updateCartUI() {
                     0
                 );
 
+
             const priceUnit =
                 Number(
                     item.priceUnit ??
                     product?.priceUnit ??
                     1000
                 );
+
 
             const unitText =
                 priceUnit === 100
@@ -1620,7 +1907,9 @@ function updateCartUI() {
 
             `;
 
-        } else {
+        }
+
+        else {
 
             div.innerHTML = `
 
@@ -1685,6 +1974,7 @@ function updateCartUI() {
 
         }
 
+
         container.appendChild(div);
 
     });
@@ -1701,8 +1991,10 @@ function updateCartUI() {
             0
         );
 
+
     countLabel.textContent =
         cartCount;
+
 
     checkoutButton.disabled =
         cart.length === 0;
@@ -1724,6 +2016,7 @@ function getCartTotal() {
                     p => p.id === item.id
                 );
 
+
             const isWeight =
                 item.saleType === "weight"
                 ||
@@ -1743,12 +2036,14 @@ function getCartTotal() {
                         0
                     );
 
+
                 const priceUnit =
                     Number(
                         item.priceUnit ??
                         product?.priceUnit ??
                         1000
                     );
+
 
                 return sum +
                     (
@@ -1758,6 +2053,7 @@ function getCartTotal() {
                     );
 
             }
+
 
             return sum +
                 Number(item.price) *
@@ -1789,8 +2085,10 @@ function openPayment() {
 
     }
 
+
     const total =
         getCartTotal();
+
 
     document.getElementById(
         "payment-total"
@@ -1798,36 +2096,44 @@ function openPayment() {
         "$" +
         formatMoney(total);
 
+
     document.getElementById(
         "payment-method"
     ).value =
         "efectivo";
 
+
     cashBillHistory = [];
+
 
     document.getElementById(
         "cash-received"
     ).value = "";
+
 
     document.getElementById(
         "cash-change"
     ).textContent =
         "Vuelto: $0";
 
+
     document.getElementById(
         "cash-change"
     ).className =
         "payment-change-result invalid";
+
 
     document.getElementById(
         "cash-payment-box"
     ).style.display =
         "block";
 
+
     document.getElementById(
         "confirm-sale-btn"
     ).disabled =
         true;
+
 
     document.getElementById(
         "payment-modal"
@@ -1844,16 +2150,21 @@ function addCashBill(amount) {
             "cash-received"
         );
 
+
     const current =
         Number(input.value) || 0;
+
 
     const newAmount =
         current + amount;
 
+
     cashBillHistory.push(amount);
+
 
     input.value =
         newAmount;
+
 
     calculateChange();
 
@@ -1862,20 +2173,28 @@ function addCashBill(amount) {
 
 function removeLastCashBill() {
 
-    if (cashBillHistory.length === 0) {
+    if (
+        cashBillHistory.length === 0
+    ) {
+
         return;
+
     }
+
 
     const lastAmount =
         cashBillHistory.pop();
+
 
     const input =
         document.getElementById(
             "cash-received"
         );
 
+
     const current =
         Number(input.value) || 0;
+
 
     const newAmount =
         Math.max(
@@ -1883,8 +2202,10 @@ function removeLastCashBill() {
             current - lastAmount
         );
 
+
     input.value =
         newAmount;
+
 
     calculateChange();
 
@@ -1895,9 +2216,11 @@ function clearCashReceived() {
 
     cashBillHistory = [];
 
+
     document.getElementById(
         "cash-received"
     ).value = "";
+
 
     calculateChange();
 
@@ -1909,18 +2232,22 @@ function calculateChange() {
     const total =
         getCartTotal();
 
+
     const input =
         document.getElementById(
             "cash-received"
         );
 
+
     const received =
         Number(input.value);
+
 
     const changeLabel =
         document.getElementById(
             "cash-change"
         );
+
 
     const confirmButton =
         document.getElementById(
@@ -1944,6 +2271,7 @@ function calculateChange() {
                     : 0
             );
 
+
         changeLabel.textContent =
             "Faltan: $" +
             formatMoney(
@@ -1953,11 +2281,14 @@ function calculateChange() {
                 )
             );
 
+
         changeLabel.className =
             "payment-change-result invalid";
 
+
         confirmButton.disabled =
             true;
+
 
         return false;
 
@@ -1977,11 +2308,14 @@ function calculateChange() {
         "Vuelto: $" +
         formatMoney(change);
 
+
     changeLabel.className =
         "payment-change-result valid";
 
+
     confirmButton.disabled =
         false;
+
 
     return true;
 
@@ -1995,10 +2329,12 @@ function updatePaymentMethod() {
             "payment-method"
         ).value;
 
+
     const cashBox =
         document.getElementById(
             "cash-payment-box"
         );
+
 
     const confirmButton =
         document.getElementById(
@@ -2011,12 +2347,16 @@ function updatePaymentMethod() {
         cashBox.style.display =
             "block";
 
+
         calculateChange();
 
-    } else {
+    }
+
+    else {
 
         cashBox.style.display =
             "none";
+
 
         confirmButton.disabled =
             false;
@@ -2038,8 +2378,10 @@ function confirmSale() {
 
     }
 
+
     const total =
         getCartTotal();
+
 
     const paymentMethod =
         document.getElementById(
@@ -2066,12 +2408,14 @@ function confirmSale() {
 
         }
 
+
         cashReceived =
             Number(
                 document.getElementById(
                     "cash-received"
                 ).value
             );
+
 
         cashChange =
             Math.round(
@@ -2110,6 +2454,7 @@ function confirmSale() {
                         p => p.id === item.id
                     );
 
+
                 const isWeight =
                     item.saleType === "weight"
                     ||
@@ -2129,12 +2474,14 @@ function confirmSale() {
                             0
                         );
 
+
                     const priceUnit =
                         Number(
                             item.priceUnit ??
                             product?.priceUnit ??
                             1000
                         );
+
 
                     return {
 
@@ -2147,6 +2494,11 @@ function confirmSale() {
                         price: item.price,
 
                         saleType: "weight",
+
+                        group:
+                            item.group ||
+                            product?.group ||
+                            "weight",
 
                         priceUnit:
                             priceUnit,
@@ -2177,7 +2529,13 @@ function confirmSale() {
 
                     saleType: "unit",
 
-                    quantity: item.quantity,
+                    group:
+                        item.group ||
+                        product?.group ||
+                        "barcode",
+
+                    quantity:
+                        item.quantity,
 
                     subtotal:
                         Number(item.price) *
@@ -2194,23 +2552,31 @@ function confirmSale() {
 
     sales.push(sale);
 
+
     saveSales();
+
 
     cart = [];
 
+
     saveCart();
 
+
     updateCartUI();
+
 
     renderCatalog(
         getFilteredProducts()
     );
 
+
     closeModal(
         "payment-modal"
     );
 
+
     cashBillHistory = [];
+
 
     alert(
         "¡Venta registrada correctamente!"
@@ -2230,24 +2596,32 @@ function cancelSale(id) {
             s => s.id === id
         );
 
+
     if (
         !sale
         ||
         sale.status === "anulada"
     ) {
+
         return;
+
     }
+
 
     if (
         !confirm(
             "¿Anular esta venta y devolver el stock?"
         )
     ) {
+
         return;
+
     }
+
 
     sale.status =
         "anulada";
+
 
     sale.cancelledAt =
         new Date().toISOString();
@@ -2259,6 +2633,7 @@ function cancelSale(id) {
             products.find(
                 p => p.id === item.id
             );
+
 
         if (product) {
 
@@ -2275,7 +2650,9 @@ function cancelSale(id) {
                         0
                     );
 
-            } else {
+            }
+
+            else {
 
                 product.stock +=
                     Number(item.quantity)
@@ -2291,9 +2668,11 @@ function cancelSale(id) {
     saveProducts();
     saveSales();
 
+
     renderCatalog(
         getFilteredProducts()
     );
+
 
     renderHistory();
 
@@ -2307,6 +2686,7 @@ function cancelSale(id) {
 function openHistory() {
 
     renderHistory();
+
 
     document.getElementById(
         "history-modal"
@@ -2322,6 +2702,7 @@ function renderHistory() {
         document.getElementById(
             "sales-history"
         );
+
 
     container.innerHTML = "";
 
@@ -2344,6 +2725,7 @@ function renderHistory() {
                 document.createElement(
                     "div"
                 );
+
 
             div.className =
                 "sale";
@@ -2387,6 +2769,7 @@ function renderHistory() {
                             `;
 
                         }
+
 
                         return `
                             ${escapeHTML(
@@ -2535,6 +2918,7 @@ function renderHistory() {
 
             `;
 
+
             container.appendChild(div);
 
         });
@@ -2550,10 +2934,30 @@ function openAdmin() {
 
     renderAdmin();
 
+
     document.getElementById(
         "admin-modal"
     ).style.display =
         "flex";
+
+}
+
+
+function getGroupName(group) {
+
+    const names = {
+
+        weight: "⚖️ Peso",
+
+        small: "🍬 Unidad chica",
+
+        barcode: "📦 Unidad"
+
+    };
+
+
+    return names[group]
+        || "Sin grupo";
 
 }
 
@@ -2565,6 +2969,7 @@ function renderAdmin() {
             "admin-products"
         );
 
+
     container.innerHTML = "";
 
 
@@ -2575,11 +2980,13 @@ function renderAdmin() {
                 "div"
             );
 
+
         div.className =
             "admin-product";
 
 
         let priceText;
+
 
         if (
             product.saleType ===
@@ -2593,12 +3000,15 @@ function renderAdmin() {
                     ? "100 g"
                     : "1 kg";
 
+
             priceText =
                 `$${formatMoney(
                     product.price
                 )} / ${unit}`;
 
-        } else {
+        }
+
+        else {
 
             priceText =
                 `$${formatMoney(
@@ -2610,6 +3020,7 @@ function renderAdmin() {
 
         let stockText;
 
+
         if (
             product.saleType ===
             "weight"
@@ -2620,7 +3031,9 @@ function renderAdmin() {
                     product.stock
                 )}`;
 
-        } else {
+        }
+
+        else {
 
             stockText =
                 `${product.stock}`;
@@ -2635,6 +3048,12 @@ function renderAdmin() {
                 : "Por unidad";
 
 
+        const groupText =
+            getGroupName(
+                product.group
+            );
+
+
         div.innerHTML = `
 
             <div class="admin-row">
@@ -2646,6 +3065,13 @@ function renderAdmin() {
                             product.name
                         )}
                     </strong>
+
+                    <br>
+
+                    <small>
+                        Grupo:
+                        ${groupText}
+                    </small>
 
                     <br>
 
@@ -2696,6 +3122,7 @@ function renderAdmin() {
 
         `;
 
+
         container.appendChild(div);
 
     });
@@ -2711,53 +3138,89 @@ function openNewProduct() {
 
     editingProductId = null;
 
+
     document.getElementById(
         "product-modal-title"
     ).textContent =
         "Nuevo producto";
 
+
     document.getElementById(
         "product-code"
     ).value = "";
+
 
     document.getElementById(
         "product-name"
     ).value = "";
 
+
+    /*
+       Por defecto:
+
+       Grupo = Peso
+       Venta = Peso
+    */
+
+    const groupSelect =
+        document.getElementById(
+            "product-group"
+        );
+
+
+    if (groupSelect) {
+
+        groupSelect.value =
+            "weight";
+
+    }
+
+
     document.getElementById(
         "product-sale-type"
     ).value =
-        "unit";
+        "weight";
+
 
     document.getElementById(
         "product-price-unit"
     ).value =
         "100";
 
+
     document.getElementById(
         "product-price"
     ).value = "";
+
 
     document.getElementById(
         "product-stock"
     ).value =
         "0";
 
+
     document.getElementById(
         "delete-product-btn"
     ).style.display =
         "none";
 
+
     document.getElementById(
         "product-code-status"
     ).textContent = "";
+
 
     document.getElementById(
         "product-code-status"
     ).className =
         "code-status";
 
+
+    updateProductGroupOptions();
+
+
     toggleWeightOptions();
+
 
     document.getElementById(
         "product-modal"
@@ -2773,7 +3236,137 @@ function openNewProductFromAdmin() {
         "admin-modal"
     );
 
+
     openNewProduct();
+
+}
+
+
+/* =========================================================
+   CAMBIO DE GRUPO DEL PRODUCTO
+========================================================= */
+
+function updateProductGroupOptions() {
+
+    const groupSelect =
+        document.getElementById(
+            "product-group"
+        );
+
+
+    if (!groupSelect) {
+        return;
+    }
+
+
+    const group =
+        groupSelect.value;
+
+
+    const saleTypeSelect =
+        document.getElementById(
+            "product-sale-type"
+        );
+
+
+    if (!saleTypeSelect) {
+        return;
+    }
+
+
+    /*
+       Peso → venta por peso
+
+       Unidad chica → venta por unidad
+
+       Unidad → venta por unidad
+    */
+
+    if (group === "weight") {
+
+        saleTypeSelect.value =
+            "weight";
+
+    }
+
+    else {
+
+        saleTypeSelect.value =
+            "unit";
+
+    }
+
+
+    toggleWeightOptions();
+
+
+    /*
+       Cambiamos también el texto del código
+       cuando el HTML tenga el label correspondiente.
+    */
+
+    const codeLabel =
+        document.querySelector(
+            '#product-code'
+        );
+
+
+    if (codeLabel) {
+        // No hacemos nada aquí.
+        // El label se actualizará desde
+        // updateProductCodeLabel().
+    }
+
+
+    updateProductCodeLabel();
+
+}
+
+
+/* =========================================================
+   TEXTO DEL CÓDIGO
+========================================================= */
+
+function updateProductCodeLabel() {
+
+    const groupSelect =
+        document.getElementById(
+            "product-group"
+        );
+
+
+    if (!groupSelect) {
+        return;
+    }
+
+
+    const label =
+        document.querySelector(
+            'label[for="product-code"]'
+        );
+
+
+    if (!label) {
+        return;
+    }
+
+
+    if (
+        groupSelect.value ===
+        "barcode"
+    ) {
+
+        label.textContent =
+            "Código de barras";
+
+    }
+
+    else {
+
+        label.textContent =
+            "Código interno";
+
+    }
 
 }
 
@@ -2789,31 +3382,66 @@ function openEditProduct(id) {
             p => p.id === id
         );
 
+
     if (!product) return;
+
 
     editingProductId =
         id;
+
 
     document.getElementById(
         "product-modal-title"
     ).textContent =
         "Editar producto";
 
+
     document.getElementById(
         "product-code"
     ).value =
         product.code;
+
 
     document.getElementById(
         "product-name"
     ).value =
         product.name;
 
+
+    const productGroup =
+        product.group
+        ||
+        (
+            product.saleType === "weight"
+                ? "weight"
+                : "barcode"
+        );
+
+
+    const groupSelect =
+        document.getElementById(
+            "product-group"
+        );
+
+
+    if (groupSelect) {
+
+        groupSelect.value =
+            productGroup;
+
+    }
+
+
     document.getElementById(
         "product-sale-type"
     ).value =
         product.saleType ||
-        "unit";
+        (
+            productGroup === "weight"
+                ? "weight"
+                : "unit"
+        );
+
 
     document.getElementById(
         "product-price-unit"
@@ -2821,28 +3449,38 @@ function openEditProduct(id) {
         product.priceUnit ||
         "1000";
 
+
     document.getElementById(
         "product-price"
     ).value =
         product.price;
+
 
     document.getElementById(
         "product-stock"
     ).value =
         product.stock;
 
+
     document.getElementById(
         "delete-product-btn"
     ).style.display =
         "block";
 
+
+    updateProductGroupOptions();
+
+
     toggleWeightOptions();
 
+
     validateProductCode();
+
 
     closeModal(
         "admin-modal"
     );
+
 
     document.getElementById(
         "product-modal"
@@ -2863,10 +3501,12 @@ function toggleWeightOptions() {
             "product-sale-type"
         ).value;
 
+
     const options =
         document.getElementById(
             "weight-options"
         );
+
 
     const stockLabel =
         document.getElementById(
@@ -2879,18 +3519,25 @@ function toggleWeightOptions() {
         options.style.display =
             "block";
 
+
         stockLabel.textContent =
             "Stock disponible (gramos)";
 
-    } else {
+    }
+
+    else {
 
         options.style.display =
             "none";
+
 
         stockLabel.textContent =
             "Stock disponible";
 
     }
+
+
+    updateProductCodeLabel();
 
 }
 
@@ -2906,16 +3553,20 @@ function validateProductCode() {
             "product-code"
         );
 
+
     const status =
         document.getElementById(
             "product-code-status"
         );
 
+
     const code =
         input.value.trim();
 
+
     status.textContent =
         "";
+
 
     status.className =
         "code-status";
@@ -2942,9 +3593,11 @@ function validateProductCode() {
         status.textContent =
             "⚠️ Este código ya está registrado.";
 
+
         status.classList.add(
             "duplicate"
         );
+
 
         return false;
 
@@ -2954,9 +3607,11 @@ function validateProductCode() {
     status.textContent =
         "✅ Código disponible";
 
+
     status.classList.add(
         "available"
     );
+
 
     return true;
 
@@ -2974,15 +3629,58 @@ function saveProduct() {
             "product-code"
         ).value.trim();
 
+
     const name =
         document.getElementById(
             "product-name"
         ).value.trim();
 
-    const saleType =
+
+    const groupSelect =
+        document.getElementById(
+            "product-group"
+        );
+
+
+    /*
+       Si el HTML todavía no tiene el selector,
+       usamos weight como valor temporal.
+    */
+
+    const group =
+        groupSelect
+            ? groupSelect.value
+            : "weight";
+
+
+    let saleType =
         document.getElementById(
             "product-sale-type"
         ).value;
+
+
+    /*
+       El grupo determina el tipo de venta.
+
+       Peso          → weight
+       Unidad chica  → unit
+       Unidad        → unit
+    */
+
+    if (group === "weight") {
+
+        saleType =
+            "weight";
+
+    }
+
+    else {
+
+        saleType =
+            "unit";
+
+    }
+
 
     const price =
         Number(
@@ -2991,12 +3689,14 @@ function saveProduct() {
             ).value
         );
 
+
     const stock =
         Number(
             document.getElementById(
                 "product-stock"
             ).value
         );
+
 
     const priceUnit =
         Number(
@@ -3012,6 +3712,7 @@ function saveProduct() {
             "Completá código y nombre."
         );
 
+
         return;
 
     }
@@ -3026,6 +3727,7 @@ function saveProduct() {
         alert(
             "Precio y stock no pueden ser negativos."
         );
+
 
         return;
 
@@ -3044,6 +3746,7 @@ function saveProduct() {
             "Seleccioná si el precio corresponde a 100 g o 1 kg."
         );
 
+
         return;
 
     }
@@ -3055,31 +3758,49 @@ function saveProduct() {
             "Ya existe un producto con ese código."
         );
 
+
         return;
 
     }
 
 
-    if (editingProductId === null) {
+    /* =========================================
+       NUEVO PRODUCTO
+    ========================================= */
+
+    if (
+        editingProductId === null
+    ) {
 
         const newProduct = {
 
             id: Date.now(),
 
-            code: code,
+            code:
+                code,
 
-            name: name,
+            name:
+                name,
 
-            price: price,
+            price:
+                price,
 
-            stock: stock,
+            stock:
+                stock,
 
-            saleType: saleType
+            saleType:
+                saleType,
+
+            group:
+                group
 
         };
 
 
-        if (saleType === "weight") {
+        if (
+            saleType ===
+            "weight"
+        ) {
 
             newProduct.priceUnit =
                 priceUnit;
@@ -3091,7 +3812,14 @@ function saveProduct() {
             newProduct
         );
 
-    } else {
+    }
+
+
+    /* =========================================
+       EDITAR PRODUCTO
+    ========================================= */
+
+    else {
 
         const product =
             products.find(
@@ -3100,36 +3828,57 @@ function saveProduct() {
                     editingProductId
             );
 
-        if (!product) return;
+
+        if (!product) {
+            return;
+        }
 
 
         product.code =
             code;
 
+
         product.name =
             name;
+
 
         product.price =
             price;
 
+
         product.stock =
             stock;
+
 
         product.saleType =
             saleType;
 
 
-        if (saleType === "weight") {
+        product.group =
+            group;
+
+
+        if (
+            saleType ===
+            "weight"
+        ) {
 
             product.priceUnit =
                 priceUnit;
 
-        } else {
+        }
+
+        else {
 
             delete product.priceUnit;
 
         }
 
+
+        /*
+           Actualizar producto que ya esté
+           dentro del carrito.
+        */
 
         const cartItem =
             cart.find(
@@ -3144,14 +3893,21 @@ function saveProduct() {
             cartItem.code =
                 code;
 
+
             cartItem.name =
                 name;
+
 
             cartItem.price =
                 price;
 
+
             cartItem.saleType =
                 saleType;
+
+
+            cartItem.group =
+                group;
 
 
             if (
@@ -3162,11 +3918,14 @@ function saveProduct() {
                 cartItem.priceUnit =
                     priceUnit;
 
-            } else {
+            }
+
+            else {
 
                 delete cartItem.priceUnit;
 
             }
+
 
             saveCart();
 
@@ -3177,15 +3936,41 @@ function saveProduct() {
 
     saveProducts();
 
+
     closeModal(
         "product-modal"
     );
+
 
     renderCatalog(
         getFilteredProducts()
     );
 
+
     updateCartUI();
+
+
+    /*
+       Si estaba abierto el administrador,
+       lo actualizamos.
+    */
+
+    const adminModal =
+        document.getElementById(
+            "admin-modal"
+        );
+
+
+    if (
+        adminModal
+        &&
+        adminModal.style.display ===
+            "flex"
+    ) {
+
+        renderAdmin();
+
+    }
 
 }
 
@@ -3200,7 +3985,9 @@ function deleteProduct() {
         editingProductId ===
         null
     ) {
+
         return;
+
     }
 
 
@@ -3218,6 +4005,7 @@ function deleteProduct() {
             "No podés eliminar un producto que está en el carrito."
         );
 
+
         return;
 
     }
@@ -3228,7 +4016,9 @@ function deleteProduct() {
             "¿Eliminar este producto?"
         )
     ) {
+
         return;
+
     }
 
 
@@ -3239,11 +4029,14 @@ function deleteProduct() {
                 editingProductId
         );
 
+
     saveProducts();
+
 
     closeModal(
         "product-modal"
     );
+
 
     renderCatalog(
         getFilteredProducts()
@@ -3266,39 +4059,83 @@ function closeModal(id) {
 }
 
 
+/* =========================================================
+   FILTRAR PRODUCTOS
+========================================================= */
+
 function getFilteredProducts() {
 
+    const searchInput =
+        document.getElementById(
+            "search"
+        );
+
+
     const query =
-        document
-            .getElementById(
-                "search"
-            )
-            .value
-            .toLowerCase()
-            .trim();
+        searchInput
+            ? searchInput.value
+                .toLowerCase()
+                .trim()
+            : "";
+
+
+    /*
+       PRIMERO:
+       seleccionamos el grupo.
+
+       DESPUÉS:
+       aplicamos la búsqueda.
+    */
+
+    let filtered =
+        products.filter(
+            product =>
+                (
+                    product.group
+                    ||
+                    (
+                        product.saleType === "weight"
+                            ? "weight"
+                            : "barcode"
+                    )
+                )
+                ===
+                selectedProductGroup
+        );
 
 
     if (!query) {
-        return products;
+
+        return filtered;
+
     }
 
 
-    return products.filter(
-        product =>
+    filtered =
+        filtered.filter(
+            product =>
 
-            product.name
-                .toLowerCase()
-                .includes(query)
+                product.name
+                    .toLowerCase()
+                    .includes(query)
 
-            ||
+                ||
 
-            String(product.code)
-                .includes(query)
+                String(product.code)
+                    .toLowerCase()
+                    .includes(query)
 
-    );
+        );
+
+
+    return filtered;
 
 }
 
+
+/* =========================================================
+   FORMATO DINERO
+========================================================= */
 
 function formatMoney(value) {
 
@@ -3314,6 +4151,10 @@ function formatMoney(value) {
 }
 
 
+/* =========================================================
+   FORMATO PESO
+========================================================= */
+
 function formatWeight(value) {
 
     return Number(value)
@@ -3324,17 +4165,25 @@ function formatWeight(value) {
 }
 
 
+/* =========================================================
+   MEDIOS DE PAGO
+========================================================= */
+
 function paymentName(method) {
 
     const names = {
 
-        efectivo: "Efectivo",
+        efectivo:
+            "Efectivo",
 
-        debito: "Débito",
+        debito:
+            "Débito",
 
-        transferencia: "Transferencia"
+        transferencia:
+            "Transferencia"
 
     };
+
 
     return names[method]
         ||
@@ -3344,6 +4193,10 @@ function paymentName(method) {
 
 }
 
+
+/* =========================================================
+   ESCAPAR HTML
+========================================================= */
 
 function escapeHTML(text) {
 
@@ -3388,6 +4241,7 @@ function toggleCart() {
             "cart"
         );
 
+
     const arrow =
         document.getElementById(
             "cart-arrow"
@@ -3413,6 +4267,9 @@ function toggleCart() {
    INICIO
 ========================================================= */
 
-renderCatalog(products);
+renderCatalog(
+    getFilteredProducts()
+);
+
 
 updateCartUI();
