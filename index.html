@@ -503,6 +503,15 @@ body{
         📋
     </button>
 
+    <!-- NUEVO: EXPORTAR -->
+
+    <button
+        class="top-btn"
+        onclick="exportData()"
+    >
+        💾
+    </button>
+
     <button
         class="top-btn"
         onclick="openAdmin()"
@@ -526,70 +535,57 @@ body{
 
 
     <section
-    id="cart"
-    class="cart"
->
-
-    <div
-    class="cart-title"
-    onclick="toggleCart()"
->
-    🛒 Carrito
-
-    <span id="cart-count">
-        0
-    </span>
-
-    <span style="float:right">
-
-        <span id="total-amount">
-            $0
-        </span>
-
-        &nbsp;
-
-        <span id="cart-arrow">
-            ⌃
-        </span>
-
-    </span>
-
-    </div>
-
-
-    <!-- BOTÓN REGISTRAR VENTA ARRIBA -->
-
-    <button
-        id="checkout-btn"
-        class="checkout"
-        onclick="openPayment()"
-        style="margin:10px 0;"
+        id="cart"
+        class="cart"
     >
-        Registrar venta
-    </button>
+
+        <div
+            class="cart-title"
+            onclick="toggleCart()"
+        >
+            🛒 Carrito
+
+            <span id="cart-count">
+                0
+            </span>
+
+            <span style="float:right">
+
+                <span id="total-amount">
+                    $0
+                </span>
+
+                &nbsp;
+
+                <span id="cart-arrow">
+                    ⌃
+                </span>
+
+            </span>
+
+        </div>
 
 
-    <!-- PRODUCTOS DEL CARRITO ABAJO -->
+        <!-- BOTÓN REGISTRAR VENTA -->
 
-    <div
-        id="cart-items"
-        class="cart-items"
-    ></div>
+        <button
+            id="checkout-btn"
+            class="checkout"
+            onclick="openPayment()"
+            style="margin:10px 0;"
+        >
+            Registrar venta
+        </button>
 
 
-    <div class="cart-summary">
+        <!-- PRODUCTOS DEL CARRITO -->
 
-    <button
-        id="checkout-btn"
-        class="checkout"
-        onclick="openPayment()"
-    >
-        Registrar venta
-    </button>
+        <div
+            id="cart-items"
+            class="cart-items"
+        ></div>
 
-</div>
-
-</section>
+    </section>
 
 </div>
 
@@ -609,14 +605,12 @@ body{
             📷 Escanear producto
         </h2>
 
-
         <video
             id="scanner-video"
             class="scanner-video"
             autoplay
             playsinline
         ></video>
-
 
         <div
             id="scanner-status"
@@ -625,14 +619,12 @@ body{
             Iniciando cámara...
         </div>
 
-
         <div
             id="scanner-code"
             class="scanner-code"
         >
             Código: —
         </div>
-
 
         <div class="modal-actions">
 
@@ -664,7 +656,6 @@ body{
         <h2 id="product-modal-title">
             Nuevo producto
         </h2>
-
 
         <div class="form-group">
 
@@ -739,14 +730,12 @@ body{
                 Cancelar
             </button>
 
-
             <button
                 class="btn-primary"
                 onclick="saveProduct()"
             >
                 Guardar
             </button>
-
 
             <button
                 id="delete-product-btn"
@@ -779,9 +768,7 @@ body{
             ⚙️ Administración
         </h2>
 
-
         <div id="admin-products"></div>
-
 
         <div class="modal-actions">
 
@@ -791,7 +778,6 @@ body{
             >
                 Cerrar
             </button>
-
 
             <button
                 class="btn-primary"
@@ -822,9 +808,7 @@ body{
             📋 Historial de ventas
         </h2>
 
-
         <div id="sales-history"></div>
-
 
         <div class="modal-actions">
 
@@ -857,7 +841,6 @@ body{
             💳 Registrar venta
         </h2>
 
-
         <div class="payment-box">
 
             <strong>Total:</strong>
@@ -868,13 +851,11 @@ body{
 
         </div>
 
-
         <div class="form-group">
 
             <label>
                 Medio de pago
             </label>
-
 
             <select id="payment-method">
 
@@ -898,7 +879,6 @@ body{
 
         </div>
 
-
         <div class="modal-actions">
 
             <button
@@ -907,7 +887,6 @@ body{
             >
                 Cancelar
             </button>
-
 
             <button
                 class="btn-primary"
@@ -1000,11 +979,6 @@ let scannerStream = null;
 let scannerActive = false;
 let barcodeDetector = null;
 
-/*
-    "sale"    = escanear para vender
-    "product" = escanear para registrar producto
-*/
-
 let scannerMode = "sale";
 
 
@@ -1012,36 +986,30 @@ async function openScanner(mode = "sale"){
 
     scannerMode = mode;
 
-
     const modal =
         document.getElementById(
             "scanner-modal"
         );
-
 
     const video =
         document.getElementById(
             "scanner-video"
         );
 
-
     const status =
         document.getElementById(
             "scanner-status"
         );
-
 
     const codeLabel =
         document.getElementById(
             "scanner-code"
         );
 
-
     const title =
         document.querySelector(
             "#scanner-modal h2"
         );
-
 
     modal.style.display = "flex";
 
@@ -1174,12 +1142,6 @@ async function buscarCodigo(){
                 "Código: " + codigo;
 
 
-            /*
-                =========================
-                MODO REGISTRAR PRODUCTO
-                =========================
-            */
-
             if(scannerMode === "product"){
 
                 detenerScanner();
@@ -1210,12 +1172,6 @@ async function buscarCodigo(){
 
             }
 
-
-            /*
-                =========================
-                MODO VENTA
-                =========================
-            */
 
             detenerScanner();
 
@@ -1379,6 +1335,80 @@ function saveSales(){
 
 
 /* =========================
+   EXPORTAR DATOS
+========================= */
+
+function exportData(){
+
+    const data = {
+
+        products: products,
+
+        sales: sales,
+
+        exportDate:
+            new Date().toISOString()
+
+    };
+
+
+    const json =
+        JSON.stringify(
+            data,
+            null,
+            2
+        );
+
+
+    const blob =
+        new Blob(
+            [json],
+            {
+                type:"application/json"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+
+    const link =
+        document.createElement("a");
+
+
+    const date =
+        new Date()
+        .toISOString()
+        .slice(0,10);
+
+
+    link.href = url;
+
+    link.download =
+        "kiosco_backup_" +
+        date +
+        ".json";
+
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+
+    URL.revokeObjectURL(url);
+
+
+    alert(
+        "Datos exportados correctamente."
+    );
+
+}
+
+
+/* =========================
    MIGRACIÓN DEL STOCK
 ========================= */
 
@@ -1432,11 +1462,13 @@ function renderCatalog(list){
 
         card.className = "product-card";
 
+
         if(product.stock <= 0){
 
             card.classList.add("disabled");
 
         }
+
 
         card.onclick = () => {
 
@@ -1470,6 +1502,7 @@ function renderCatalog(list){
             </div>
 
         `;
+
 
         container.appendChild(card);
 
@@ -1556,9 +1589,11 @@ function addToCart(id){
     saveProducts();
     saveCart();
 
+
     renderCatalog(
         getFilteredProducts()
     );
+
 
     updateCartUI();
 
@@ -1606,9 +1641,11 @@ function decreaseCart(id){
     saveProducts();
     saveCart();
 
+
     renderCatalog(
         getFilteredProducts()
     );
+
 
     updateCartUI();
 
@@ -1642,9 +1679,11 @@ function removeFromCart(id){
     saveProducts();
     saveCart();
 
+
     renderCatalog(
         getFilteredProducts()
     );
+
 
     updateCartUI();
 
@@ -1656,7 +1695,10 @@ function clearCart(){
     cart.forEach(item => {
 
         const product =
-            products.find(p => p.id === item.id);
+            products.find(
+                p => p.id === item.id
+            );
+
 
         if(product){
 
@@ -1673,9 +1715,11 @@ function clearCart(){
     saveProducts();
     saveCart();
 
+
     renderCatalog(
         getFilteredProducts()
     );
+
 
     updateCartUI();
 
@@ -1685,39 +1729,55 @@ function clearCart(){
 function updateCartUI(){
 
     const container =
-        document.getElementById("cart-items");
+        document.getElementById(
+            "cart-items"
+        );
+
 
     const totalLabel =
-        document.getElementById("total-amount");
+        document.getElementById(
+            "total-amount"
+        );
+
 
     const countLabel =
-        document.getElementById("cart-count");
+        document.getElementById(
+            "cart-count"
+        );
+
 
     const checkoutButton =
-        document.getElementById("checkout-btn");
+        document.getElementById(
+            "checkout-btn"
+        );
 
 
     container.innerHTML = "";
 
 
     let total = 0;
+
     let count = 0;
 
 
     cart.forEach(item => {
 
         const subtotal =
-            item.price * item.quantity;
+            item.price *
+            item.quantity;
 
 
         total += subtotal;
+
         count += item.quantity;
 
 
         const div =
             document.createElement("div");
 
-        div.className = "cart-item";
+
+        div.className =
+            "cart-item";
 
 
         div.innerHTML = `
@@ -1790,7 +1850,9 @@ function getCartTotal(){
 
     return cart.reduce(
         (sum,item) =>
-            sum + item.price * item.quantity,
+            sum +
+            item.price *
+            item.quantity,
         0
     );
 
@@ -1805,7 +1867,9 @@ function openPayment(){
 
     if(cart.length === 0){
 
-        alert("El carrito está vacío.");
+        alert(
+            "El carrito está vacío."
+        );
 
         return;
 
@@ -1815,7 +1879,10 @@ function openPayment(){
     document.getElementById(
         "payment-total"
     ).textContent =
-        "$" + formatMoney(getCartTotal());
+        "$" +
+        formatMoney(
+            getCartTotal()
+        );
 
 
     document.getElementById(
@@ -1829,7 +1896,9 @@ function confirmSale(){
 
     if(cart.length === 0){
 
-        closeModal("payment-modal");
+        closeModal(
+            "payment-modal"
+        );
 
         return;
 
@@ -1850,22 +1919,32 @@ function confirmSale(){
 
         id:Date.now(),
 
-        date:new Date().toISOString(),
+        date:
+            new Date().toISOString(),
 
         status:"realizada",
 
-        paymentMethod:paymentMethod,
+        paymentMethod:
+            paymentMethod,
 
-        items:cart.map(item => ({
+        items:
+            cart.map(item => ({
 
-            id:item.id,
-            code:item.code,
-            name:item.name,
-            price:item.price,
-            quantity:item.quantity,
-            subtotal:item.price * item.quantity
+                id:item.id,
 
-        })),
+                code:item.code,
+
+                name:item.name,
+
+                price:item.price,
+
+                quantity:item.quantity,
+
+                subtotal:
+                    item.price *
+                    item.quantity
+
+            })),
 
         total:total
 
@@ -1880,19 +1959,26 @@ function confirmSale(){
 
     cart = [];
 
+
     saveCart();
 
+
     updateCartUI();
+
 
     renderCatalog(
         getFilteredProducts()
     );
 
 
-    closeModal("payment-modal");
+    closeModal(
+        "payment-modal"
+    );
 
 
-    alert("¡Venta registrada correctamente!");
+    alert(
+        "¡Venta registrada correctamente!"
+    );
 
 }
 
@@ -1900,11 +1986,15 @@ function confirmSale(){
 function cancelSale(id){
 
     const sale =
-        sales.find(s => s.id === id);
+        sales.find(
+            s => s.id === id
+        );
 
 
-    if(!sale ||
-       sale.status === "anulada"){
+    if(
+        !sale ||
+        sale.status === "anulada"
+    ){
 
         return;
 
@@ -1922,6 +2012,7 @@ function cancelSale(id){
 
     sale.status = "anulada";
 
+
     sale.cancelledAt =
         new Date().toISOString();
 
@@ -1930,13 +2021,15 @@ function cancelSale(id){
 
         const product =
             products.find(
-                p => p.id === item.id
+                p =>
+                    p.id === item.id
             );
 
 
         if(product){
 
-            product.stock += item.quantity;
+            product.stock +=
+                item.quantity;
 
         }
 
@@ -1944,12 +2037,14 @@ function cancelSale(id){
 
 
     saveProducts();
+
     saveSales();
 
 
     renderCatalog(
         getFilteredProducts()
     );
+
 
     renderHistory();
 
@@ -1963,6 +2058,7 @@ function cancelSale(id){
 function openHistory(){
 
     renderHistory();
+
 
     document.getElementById(
         "history-modal"
@@ -1999,12 +2095,17 @@ function renderHistory(){
         const div =
             document.createElement("div");
 
-        div.className = "sale";
+
+        div.className =
+            "sale";
 
 
         const date =
-            new Date(sale.date)
-            .toLocaleString("es-AR");
+            new Date(
+                sale.date
+            ).toLocaleString(
+                "es-AR"
+            );
 
 
         const payment =
@@ -2109,6 +2210,7 @@ function openAdmin(){
 
     renderAdmin();
 
+
     document.getElementById(
         "admin-modal"
     ).style.display = "flex";
@@ -2131,6 +2233,7 @@ function renderAdmin(){
 
         const div =
             document.createElement("div");
+
 
         div.className =
             "admin-product";
@@ -2239,7 +2342,9 @@ function openNewProduct(){
 
 function openNewProductFromAdmin(){
 
-    closeModal("admin-modal");
+    closeModal(
+        "admin-modal"
+    );
 
     openNewProduct();
 
@@ -2249,7 +2354,9 @@ function openNewProductFromAdmin(){
 function openEditProduct(id){
 
     const product =
-        products.find(p => p.id === id);
+        products.find(
+            p => p.id === id
+        );
 
 
     if(!product) return;
@@ -2290,18 +2397,22 @@ function openEditProduct(id){
 
     document.getElementById(
         "delete-product-btn"
-    ).style.display = "block";
+    ).style.display =
+        "block";
 
 
     validateProductCode();
 
 
-    closeModal("admin-modal");
+    closeModal(
+        "admin-modal"
+    );
 
 
     document.getElementById(
         "product-modal"
-    ).style.display = "flex";
+    ).style.display =
+        "flex";
 
 }
 
@@ -2344,8 +2455,10 @@ function validateProductCode(){
     const duplicate =
         products.find(
             p =>
-                String(p.code) === String(code) &&
-                p.id !== editingProductId
+                String(p.code) ===
+                String(code) &&
+                p.id !==
+                editingProductId
         );
 
 
@@ -2354,9 +2467,11 @@ function validateProductCode(){
         status.textContent =
             "⚠️ Este código ya está registrado.";
 
+
         status.classList.add(
             "duplicate"
         );
+
 
         return false;
 
@@ -2365,6 +2480,7 @@ function validateProductCode(){
 
     status.textContent =
         "✅ Código disponible";
+
 
     status.classList.add(
         "available"
@@ -2412,27 +2528,28 @@ function saveProduct(){
 
     if(!code || !name){
 
-        alert("Completá código y nombre.");
+        alert(
+            "Completá código y nombre."
+        );
 
         return;
 
     }
 
 
-    if(price < 0 || stock < 0){
+    if(
+        price < 0 ||
+        stock < 0
+    ){
 
-        alert("Precio y stock no pueden ser negativos.");
+        alert(
+            "Precio y stock no pueden ser negativos."
+        );
 
         return;
 
     }
 
-
-    /*
-        Segunda validación al guardar.
-        Esto evita guardar un código duplicado
-        aunque el campo haya sido modificado.
-    */
 
     if(!validateProductCode()){
 
@@ -2465,7 +2582,9 @@ function saveProduct(){
 
         const product =
             products.find(
-                p => p.id === editingProductId
+                p =>
+                    p.id ===
+                    editingProductId
             );
 
 
@@ -2473,22 +2592,30 @@ function saveProduct(){
 
 
         product.code = code;
+
         product.name = name;
+
         product.price = price;
+
         product.stock = stock;
 
 
         const cartItem =
             cart.find(
-                item => item.id === product.id
+                item =>
+                    item.id ===
+                    product.id
             );
 
 
         if(cartItem){
 
             cartItem.code = code;
+
             cartItem.name = name;
+
             cartItem.price = price;
+
 
             saveCart();
 
@@ -2500,7 +2627,9 @@ function saveProduct(){
     saveProducts();
 
 
-    closeModal("product-modal");
+    closeModal(
+        "product-modal"
+    );
 
 
     renderCatalog(
@@ -2516,13 +2645,17 @@ function saveProduct(){
 
 function deleteProduct(){
 
-    if(editingProductId === null)
+    if(
+        editingProductId === null
+    )
         return;
 
 
     const inCart =
         cart.some(
-            item => item.id === editingProductId
+            item =>
+                item.id ===
+                editingProductId
         );
 
 
@@ -2548,14 +2681,18 @@ function deleteProduct(){
 
     products =
         products.filter(
-            p => p.id !== editingProductId
+            p =>
+                p.id !==
+                editingProductId
         );
 
 
     saveProducts();
 
 
-    closeModal("product-modal");
+    closeModal(
+        "product-modal"
+    );
 
 
     renderCatalog(
@@ -2631,7 +2768,9 @@ function paymentName(method){
     };
 
 
-    return names[method] || method || "Sin especificar";
+    return names[method] ||
+           method ||
+           "Sin especificar";
 
 }
 
@@ -2639,11 +2778,26 @@ function paymentName(method){
 function escapeHTML(text){
 
     return String(text)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 
 }
 
@@ -2655,17 +2809,26 @@ function escapeHTML(text){
 function toggleCart(){
 
     const cartElement =
-        document.getElementById("cart");
+        document.getElementById(
+            "cart"
+        );
+
 
     const arrow =
-        document.getElementById("cart-arrow");
+        document.getElementById(
+            "cart-arrow"
+        );
 
 
-    cartElement.classList.toggle("expanded");
+    cartElement.classList.toggle(
+        "expanded"
+    );
 
 
     arrow.textContent =
-        cartElement.classList.contains("expanded")
+        cartElement.classList.contains(
+            "expanded"
+        )
         ? "⌄"
         : "⌃";
 
