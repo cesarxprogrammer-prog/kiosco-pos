@@ -526,60 +526,65 @@ body{
 
 
     <section
-        id="cart"
-        class="cart"
+    id="cart"
+    class="cart"
+>
+
+    <div
+        class="cart-title"
+        onclick="toggleCart()"
     >
+        🛒 Carrito
 
-        <div
-            class="cart-title"
-            onclick="toggleCart()"
+        <span id="cart-count">
+            0
+        </span>
+
+        <span
+            id="cart-arrow"
+            style="float:right"
         >
-            🛒 Carrito
+            ⌃
+        </span>
 
-            <span id="cart-count">
-                0
-            </span>
+    </div>
 
-            <span
-                id="cart-arrow"
-                style="float:right"
-            >
-                ⌃
+
+    <!-- BOTÓN REGISTRAR VENTA ARRIBA -->
+
+    <button
+        id="checkout-btn"
+        class="checkout"
+        onclick="openPayment()"
+        style="margin:10px 0;"
+    >
+        Registrar venta
+    </button>
+
+
+    <!-- PRODUCTOS DEL CARRITO ABAJO -->
+
+    <div
+        id="cart-items"
+        class="cart-items"
+    ></div>
+
+
+    <div class="cart-summary">
+
+        <div class="total-row">
+
+            <span>Total</span>
+
+            <span id="total-amount">
+                $0
             </span>
 
         </div>
 
+    </div>
 
-        <div
-            id="cart-items"
-            class="cart-items"
-        ></div>
-
-
-        <div class="cart-summary">
-
-            <div class="total-row">
-
-                <span>Total</span>
-
-                <span id="total-amount">
-                    $0
-                </span>
-
-            </div>
-
-
-            <button
-                id="checkout-btn"
-                class="checkout"
-                onclick="openPayment()"
-            >
-                Registrar venta
-            </button>
-
-        </div>
-
-    </section>
+</section>
 
 </div>
 
