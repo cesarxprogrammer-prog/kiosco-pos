@@ -41,7 +41,7 @@ const defaultProducts = [
         price: 300,
         stock: 20,
         saleType: "unit",
-        group: "barcode"
+        group: "small"
     },
 
     {
@@ -56,21 +56,17 @@ const defaultProducts = [
 
 ];
 
-
 let products =
     JSON.parse(localStorage.getItem("products"))
     || defaultProducts;
-
 
 let cart =
     JSON.parse(localStorage.getItem("cart"))
     || [];
 
-
 let sales =
     JSON.parse(localStorage.getItem("sales"))
     || [];
-
 
 let editingProductId = null;
 
@@ -92,15 +88,14 @@ products.forEach(product => {
         product.saleType = "unit";
     }
 
-
     /*
        Productos anteriores:
 
        weight → weight
        unit   → barcode
 
-       De esta manera los productos existentes
-       no se rompen.
+       Si posteriormente se crean productos
+       small, conservarán ese grupo.
     */
 
     if (!product.group) {
@@ -111,7 +106,6 @@ products.forEach(product => {
                 : "barcode";
 
     }
-
 
     if (
         product.saleType === "weight"
@@ -124,7 +118,6 @@ products.forEach(product => {
     }
 
 });
-
 
 saveProducts();
 
@@ -140,9 +133,7 @@ cart.forEach(item => {
             p => p.id === item.id
         );
 
-
     if (!product) return;
-
 
     if (!item.saleType) {
 
@@ -150,7 +141,6 @@ cart.forEach(item => {
             product.saleType || "unit";
 
     }
-
 
     if (!item.group) {
 
@@ -164,18 +154,14 @@ cart.forEach(item => {
 
     }
 
-
     if (item.saleType === "weight") {
 
-        if (
-            typeof item.weight !== "number"
-        ) {
+        if (typeof item.weight !== "number") {
 
             item.weight =
                 Number(item.quantity) || 0;
 
         }
-
 
         item.quantity =
             item.weight;
@@ -183,7 +169,6 @@ cart.forEach(item => {
     }
 
 });
-
 
 saveCart();
 
@@ -211,43 +196,34 @@ function playScanSound() {
         window.AudioContext ||
         window.webkitAudioContext;
 
-
     if (!AudioContext) {
         return;
     }
 
-
     const audioContext =
         new AudioContext();
-
 
     const oscillator =
         audioContext.createOscillator();
 
-
     const gain =
         audioContext.createGain();
-
 
     oscillator.type =
         "sine";
 
-
     oscillator.frequency.value =
         1000;
-
 
     gain.gain.setValueAtTime(
         0.15,
         audioContext.currentTime
     );
 
-
     gain.gain.exponentialRampToValueAtTime(
         0.001,
         audioContext.currentTime + 0.12
     );
-
 
     oscillator.connect(gain);
 
@@ -255,9 +231,7 @@ function playScanSound() {
         audioContext.destination
     );
 
-
     oscillator.start();
-
 
     oscillator.stop(
         audioContext.currentTime + 0.12
@@ -274,46 +248,30 @@ async function openScanner(mode = "sale") {
 
     scannerMode = mode;
 
-
     const modal =
-        document.getElementById(
-            "scanner-modal"
-        );
-
+        document.getElementById("scanner-modal");
 
     const video =
-        document.getElementById(
-            "scanner-video"
-        );
-
+        document.getElementById("scanner-video");
 
     const status =
-        document.getElementById(
-            "scanner-status"
-        );
-
+        document.getElementById("scanner-status");
 
     const codeLabel =
-        document.getElementById(
-            "scanner-code"
-        );
-
+        document.getElementById("scanner-code");
 
     const productMessage =
         document.getElementById(
             "scanner-product-message"
         );
 
-
     const title =
         document.querySelector(
             "#scanner-modal h2"
         );
 
-
     modal.style.display =
         "flex";
-
 
     if (scannerMode === "product") {
 
@@ -327,23 +285,18 @@ async function openScanner(mode = "sale") {
 
     }
 
-
     codeLabel.textContent =
         "Código: —";
-
 
     productMessage.textContent =
         "";
 
-
     status.textContent =
         "Iniciando cámara...";
-
 
     scannerActive = false;
     scannerCooldown = false;
     lastDetectedCode = null;
-
 
     if (!("BarcodeDetector" in window)) {
 
@@ -353,7 +306,6 @@ async function openScanner(mode = "sale") {
         return;
 
     }
-
 
     try {
 
@@ -369,7 +321,6 @@ async function openScanner(mode = "sale") {
                 ]
 
             });
-
 
         scannerStream =
             await navigator.mediaDevices.getUserMedia({
@@ -400,18 +351,14 @@ async function openScanner(mode = "sale") {
 
             });
 
-
         video.srcObject =
             scannerStream;
-
 
         const track =
             scannerStream.getVideoTracks()[0];
 
-
         const settings =
             track.getSettings();
-
 
         console.log(
             "Resolución real de cámara:",
@@ -420,22 +367,18 @@ async function openScanner(mode = "sale") {
             settings.height
         );
 
-
         scannerActive = true;
-
 
         status.textContent =
             scannerMode === "sale"
                 ? "🟢 Buscando producto..."
                 : "🟢 Buscando código...";
 
-
         buscarCodigo();
 
     } catch (error) {
 
         console.error(error);
-
 
         status.textContent =
             "❌ No se pudo iniciar la cámara: "
@@ -463,18 +406,15 @@ async function buscarCodigo() {
         return;
     }
 
-
     const video =
         document.getElementById(
             "scanner-video"
         );
 
-
     try {
 
         const barcodes =
             await barcodeDetector.detect(video);
-
 
         if (
             barcodes.length > 0
@@ -484,7 +424,6 @@ async function buscarCodigo() {
 
             const codigo =
                 barcodes[0].rawValue;
-
 
             if (
                 codigo === lastDetectedCode
@@ -498,13 +437,10 @@ async function buscarCodigo() {
 
             }
 
-
             lastDetectedCode =
                 codigo;
 
-
             scannerCooldown = true;
-
 
             document.getElementById(
                 "scanner-code"
@@ -522,28 +458,23 @@ async function buscarCodigo() {
 
                 detenerScanner();
 
-
                 document.getElementById(
                     "product-code"
                 ).value =
                     codigo;
 
-
                 validateProductCode();
-
 
                 document.getElementById(
                     "scanner-status"
                 ).textContent =
                     "✅ Código leído";
 
-
                 setTimeout(() => {
 
                     closeScanner();
 
                 }, 500);
-
 
                 return;
 
@@ -555,11 +486,16 @@ async function buscarCodigo() {
             ========================================= */
 
             /*
-               El scanner busca por código en TODOS
-               los grupos.
+               IMPORTANTE:
 
-               No importa qué grupo esté seleccionado
-               en el catálogo.
+               El scanner busca por código
+               independientemente del grupo.
+
+               Por lo tanto puede encontrar:
+
+               weight
+               small
+               barcode
             */
 
             const product =
@@ -569,14 +505,12 @@ async function buscarCodigo() {
                         String(codigo)
                 );
 
-
             if (!product) {
 
                 document.getElementById(
                     "scanner-status"
                 ).textContent =
                     "❌ Producto no encontrado";
-
 
                 alert(
                     "No existe un producto con el código "
@@ -594,7 +528,6 @@ async function buscarCodigo() {
                 ).textContent =
                     "❌ Producto sin stock";
 
-
                 alert(
                     product.name +
                     " no tiene stock disponible."
@@ -606,9 +539,7 @@ async function buscarCodigo() {
 
                 addToCart(product.id);
 
-
                 playScanSound();
-
 
                 document.getElementById(
                     "scanner-product-message"
@@ -617,7 +548,6 @@ async function buscarCodigo() {
                     product.name +
                     " agregado";
 
-
                 document.getElementById(
                     "scanner-status"
                 ).textContent =
@@ -625,17 +555,14 @@ async function buscarCodigo() {
 
             }
 
-
             setTimeout(() => {
 
                 scannerCooldown = false;
                 lastDetectedCode = null;
 
-
                 document.getElementById(
                     "scanner-product-message"
                 ).textContent = "";
-
 
                 if (scannerActive) {
 
@@ -655,7 +582,6 @@ async function buscarCodigo() {
         console.error(error);
 
     }
-
 
     if (scannerActive) {
 
@@ -679,24 +605,20 @@ function detenerScanner() {
     scannerCooldown = false;
     lastDetectedCode = null;
 
-
     if (scannerStream) {
 
         scannerStream
             .getTracks()
             .forEach(track => track.stop());
 
-
         scannerStream = null;
 
     }
-
 
     const video =
         document.getElementById(
             "scanner-video"
         );
-
 
     video.srcObject = null;
 
@@ -707,14 +629,11 @@ function closeScanner() {
 
     detenerScanner();
 
-
     scannerMode = "sale";
-
 
     document.getElementById(
         "scanner-product-message"
     ).textContent = "";
-
 
     document.getElementById(
         "scanner-modal"
@@ -776,13 +695,11 @@ function exportData() {
                     ...itemWithoutSubtotal
                 } = item;
 
-
                 return itemWithoutSubtotal;
 
             })
 
         }));
-
 
     const data = {
 
@@ -795,14 +712,12 @@ function exportData() {
 
     };
 
-
     const json =
         JSON.stringify(
             data,
             null,
             2
         );
-
 
     const blob =
         new Blob(
@@ -812,42 +727,32 @@ function exportData() {
             }
         );
 
-
     const url =
         URL.createObjectURL(blob);
 
-
     const link =
         document.createElement("a");
-
 
     const date =
         new Date()
             .toISOString()
             .slice(0, 10);
 
-
     link.href =
         url;
-
 
     link.download =
         "kiosco_backup_" +
         date +
         ".json";
 
-
     document.body.appendChild(link);
-
 
     link.click();
 
-
     document.body.removeChild(link);
 
-
     URL.revokeObjectURL(url);
-
 
     alert(
         "Datos exportados correctamente."
@@ -875,7 +780,6 @@ if (
                 p => p.id === item.id
             );
 
-
         if (product) {
 
             if (
@@ -888,7 +792,6 @@ if (
                         item.quantity ??
                         0
                     );
-
 
                 product.stock =
                     Math.max(
@@ -915,9 +818,7 @@ if (
 
     });
 
-
     saveProducts();
-
 
     localStorage.setItem(
         "cartStockReserved",
@@ -928,14 +829,28 @@ if (
 
 
 /* =========================================================
-   GRUPOS DEL CATÁLOGO
+   SELECCIONAR GRUPO
 ========================================================= */
 
 function selectProductGroup(group) {
 
+    const validGroups = [
+        "weight",
+        "small",
+        "barcode"
+    ];
+
+    if (!validGroups.includes(group)) {
+        return;
+    }
+
     selectedProductGroup =
         group;
 
+    /*
+       Si el HTML ya tiene los botones
+       de grupo, actualizamos el estado visual.
+    */
 
     document
         .querySelectorAll(".group-btn")
@@ -947,12 +862,10 @@ function selectProductGroup(group) {
 
         });
 
-
     const selectedButton =
         document.getElementById(
             "group-" + group
         );
-
 
     if (selectedButton) {
 
@@ -961,7 +874,6 @@ function selectProductGroup(group) {
         );
 
     }
-
 
     renderCatalog(
         getFilteredProducts()
@@ -981,19 +893,19 @@ function renderCatalog(list) {
             "products"
         );
 
+    if (!container) {
+        return;
+    }
 
     container.innerHTML = "";
-
 
     list.forEach(product => {
 
         const card =
             document.createElement("div");
 
-
         card.className =
             "product-card";
-
 
         if (product.stock <= 0) {
 
@@ -1002,7 +914,6 @@ function renderCatalog(list) {
             );
 
         }
-
 
         card.onclick = () => {
 
@@ -1016,18 +927,14 @@ function renderCatalog(list) {
 
         };
 
-
         let stockText;
-
 
         if (product.stock <= 0) {
 
             stockText =
                 "Sin stock";
 
-        }
-
-        else if (
+        } else if (
             product.saleType === "weight"
         ) {
 
@@ -1036,21 +943,18 @@ function renderCatalog(list) {
                     product.stock
                 )}`;
 
-        }
-
-        else {
+        } else {
 
             stockText =
                 `Stock: ${product.stock}`;
 
         }
 
-
         let priceText;
 
-
         if (
-            product.saleType === "weight"
+            product.saleType ===
+            "weight"
         ) {
 
             const unit =
@@ -1058,15 +962,12 @@ function renderCatalog(list) {
                     ? "100 g"
                     : "1 kg";
 
-
             priceText =
                 `$${formatMoney(
                     product.price
                 )} / ${unit}`;
 
-        }
-
-        else {
+        } else {
 
             priceText =
                 `$${formatMoney(
@@ -1074,7 +975,6 @@ function renderCatalog(list) {
                 )}`;
 
         }
-
 
         card.innerHTML = `
 
@@ -1098,13 +998,16 @@ function renderCatalog(list) {
 
         `;
 
-
         container.appendChild(card);
 
     });
 
 }
 
+
+/* =========================================================
+   FILTRAR PRODUCTOS
+========================================================= */
 
 function filterProducts() {
 
@@ -1126,7 +1029,6 @@ function addToCart(id) {
             p => p.id === id
         );
 
-
     if (
         !product
         ||
@@ -1147,7 +1049,8 @@ function addToCart(id) {
     ========================================= */
 
     if (
-        product.saleType === "weight"
+        product.saleType ===
+        "weight"
     ) {
 
         const existing =
@@ -1155,17 +1058,14 @@ function addToCart(id) {
                 item => item.id === id
             );
 
-
         if (existing) {
             return;
         }
-
 
         const defaultWeight =
             Number(product.priceUnit) === 100
                 ? 100
                 : 1000;
-
 
         if (
             product.stock <
@@ -1183,10 +1083,8 @@ function addToCart(id) {
 
         }
 
-
         product.stock -=
             defaultWeight;
-
 
         cart.push({
 
@@ -1201,32 +1099,27 @@ function addToCart(id) {
             saleType: "weight",
 
             group:
-                product.group || "weight",
+                product.group ||
+                "weight",
 
             priceUnit:
                 Number(product.priceUnit)
                 || 1000,
 
-            weight:
-                defaultWeight,
+            weight: defaultWeight,
 
-            quantity:
-                defaultWeight
+            quantity: defaultWeight
 
         });
 
-
         saveProducts();
         saveCart();
-
 
         renderCatalog(
             getFilteredProducts()
         );
 
-
         updateCartUI();
-
 
         return;
 
@@ -1242,17 +1135,13 @@ function addToCart(id) {
             item => item.id === id
         );
 
-
     product.stock -= 1;
-
 
     if (existing) {
 
         existing.quantity += 1;
 
-    }
-
-    else {
+    } else {
 
         cart.push({
 
@@ -1267,7 +1156,8 @@ function addToCart(id) {
             saleType: "unit",
 
             group:
-                product.group || "barcode",
+                product.group ||
+                "barcode",
 
             quantity: 1
 
@@ -1275,15 +1165,12 @@ function addToCart(id) {
 
     }
 
-
     saveProducts();
     saveCart();
-
 
     renderCatalog(
         getFilteredProducts()
     );
-
 
     updateCartUI();
 
@@ -1301,17 +1188,16 @@ function increaseCart(id) {
             p => p.id === id
         );
 
-
     if (
         product
         &&
-        product.saleType === "weight"
+        product.saleType ===
+        "weight"
     ) {
 
         return;
 
     }
-
 
     addToCart(id);
 
@@ -1325,18 +1211,14 @@ function decreaseCart(id) {
             i => i.id === id
         );
 
-
     if (!item) return;
-
 
     const product =
         products.find(
             p => p.id === id
         );
 
-
     if (!product) return;
-
 
     if (
         product.saleType === "weight"
@@ -1348,12 +1230,9 @@ function decreaseCart(id) {
 
     }
 
-
     product.stock += 1;
 
-
     item.quantity -= 1;
-
 
     if (item.quantity <= 0) {
 
@@ -1364,15 +1243,12 @@ function decreaseCart(id) {
 
     }
 
-
     saveProducts();
     saveCart();
-
 
     renderCatalog(
         getFilteredProducts()
     );
-
 
     updateCartUI();
 
@@ -1390,31 +1266,26 @@ function changeCartWeight(id, value) {
             i => i.id === id
         );
 
-
     if (!item) return;
-
 
     const product =
         products.find(
             p => p.id === id
         );
 
-
     if (!product) return;
 
-
     if (
-        product.saleType !== "weight"
+        product.saleType !==
+        "weight"
     ) {
 
         return;
 
     }
 
-
     let newWeight =
         Number(value);
-
 
     if (
         !Number.isFinite(newWeight)
@@ -1426,18 +1297,14 @@ function changeCartWeight(id, value) {
 
     }
 
-
     newWeight =
         Math.floor(newWeight);
-
 
     const oldWeight =
         Number(item.weight) || 0;
 
-
     const difference =
         newWeight - oldWeight;
-
 
     if (difference > 0) {
 
@@ -1450,20 +1317,16 @@ function changeCartWeight(id, value) {
                 "No hay suficiente stock disponible."
             );
 
-
             updateCartUI();
-
 
             return;
 
         }
 
-
         product.stock -=
             difference;
 
     }
-
 
     if (difference < 0) {
 
@@ -1472,23 +1335,18 @@ function changeCartWeight(id, value) {
 
     }
 
-
     item.weight =
         newWeight;
-
 
     item.quantity =
         newWeight;
 
-
     saveProducts();
     saveCart();
-
 
     renderCatalog(
         getFilteredProducts()
     );
-
 
     updateCartUI();
 
@@ -1499,7 +1357,10 @@ function changeCartWeight(id, value) {
    SUGERENCIAS DE PESO
 ========================================================= */
 
-function setSuggestedWeight(id, weight) {
+function setSuggestedWeight(
+    id,
+    weight
+) {
 
     changeCartWeight(
         id,
@@ -1509,7 +1370,9 @@ function setSuggestedWeight(id, weight) {
 }
 
 
-function getWeightSuggestions(priceUnit) {
+function getWeightSuggestions(
+    priceUnit
+) {
 
     if (
         Number(priceUnit) === 100
@@ -1523,7 +1386,6 @@ function getWeightSuggestions(priceUnit) {
         ];
 
     }
-
 
     return [
         250,
@@ -1545,7 +1407,6 @@ function renderWeightSuggestions(
         getWeightSuggestions(
             priceUnit
         );
-
 
     return `
 
@@ -1594,22 +1455,21 @@ function removeFromCart(id) {
             i => i.id === id
         );
 
-
     if (!item) return;
-
 
     const product =
         products.find(
             p => p.id === id
         );
 
-
     if (product) {
 
         if (
-            product.saleType === "weight"
+            product.saleType ===
+            "weight"
             ||
-            item.saleType === "weight"
+            item.saleType ===
+            "weight"
         ) {
 
             product.stock +=
@@ -1619,9 +1479,7 @@ function removeFromCart(id) {
                     0
                 );
 
-        }
-
-        else {
+        } else {
 
             product.stock +=
                 Number(item.quantity)
@@ -1631,21 +1489,17 @@ function removeFromCart(id) {
 
     }
 
-
     cart =
         cart.filter(
             i => i.id !== id
         );
 
-
     saveProducts();
     saveCart();
-
 
     renderCatalog(
         getFilteredProducts()
     );
-
 
     updateCartUI();
 
@@ -1665,13 +1519,14 @@ function clearCart() {
                 p => p.id === item.id
             );
 
-
         if (product) {
 
             if (
-                product.saleType === "weight"
+                product.saleType ===
+                "weight"
                 ||
-                item.saleType === "weight"
+                item.saleType ===
+                "weight"
             ) {
 
                 product.stock +=
@@ -1681,9 +1536,7 @@ function clearCart() {
                         0
                     );
 
-            }
-
-            else {
+            } else {
 
                 product.stock +=
                     Number(item.quantity)
@@ -1695,18 +1548,14 @@ function clearCart() {
 
     });
 
-
     cart = [];
-
 
     saveProducts();
     saveCart();
 
-
     renderCatalog(
         getFilteredProducts()
     );
-
 
     updateCartUI();
 
@@ -1724,27 +1573,22 @@ function updateCartUI() {
             "cart-items"
         );
 
-
     const totalLabel =
         document.getElementById(
             "total-amount"
         );
-
 
     const countLabel =
         document.getElementById(
             "cart-count"
         );
 
-
     const checkoutButton =
         document.getElementById(
             "checkout-btn"
         );
 
-
     container.innerHTML = "";
-
 
     let total = 0;
 
@@ -1756,16 +1600,16 @@ function updateCartUI() {
                 p => p.id === item.id
             );
 
-
         const isWeight =
-            item.saleType === "weight"
+            item.saleType ===
+            "weight"
             ||
             (
                 product
                 &&
-                product.saleType === "weight"
+                product.saleType ===
+                "weight"
             );
-
 
         let subtotal;
 
@@ -1779,7 +1623,6 @@ function updateCartUI() {
                     0
                 );
 
-
             const priceUnit =
                 Number(
                     item.priceUnit ??
@@ -1787,15 +1630,12 @@ function updateCartUI() {
                     1000
                 );
 
-
             subtotal =
                 weight *
                 Number(item.price) /
                 priceUnit;
 
-        }
-
-        else {
+        } else {
 
             subtotal =
                 Number(item.price) *
@@ -1808,8 +1648,9 @@ function updateCartUI() {
 
 
         const div =
-            document.createElement("div");
-
+            document.createElement(
+                "div"
+            );
 
         div.className =
             "cart-item";
@@ -1824,14 +1665,12 @@ function updateCartUI() {
                     0
                 );
 
-
             const priceUnit =
                 Number(
                     item.priceUnit ??
                     product?.priceUnit ??
                     1000
                 );
-
 
             const unitText =
                 priceUnit === 100
@@ -1907,9 +1746,7 @@ function updateCartUI() {
 
             `;
 
-        }
-
-        else {
+        } else {
 
             div.innerHTML = `
 
@@ -1974,7 +1811,6 @@ function updateCartUI() {
 
         }
 
-
         container.appendChild(div);
 
     });
@@ -1991,10 +1827,8 @@ function updateCartUI() {
             0
         );
 
-
     countLabel.textContent =
         cartCount;
-
 
     checkoutButton.disabled =
         cart.length === 0;
@@ -2016,14 +1850,15 @@ function getCartTotal() {
                     p => p.id === item.id
                 );
 
-
             const isWeight =
-                item.saleType === "weight"
+                item.saleType ===
+                "weight"
                 ||
                 (
                     product
                     &&
-                    product.saleType === "weight"
+                    product.saleType ===
+                    "weight"
                 );
 
 
@@ -2036,14 +1871,12 @@ function getCartTotal() {
                         0
                     );
 
-
                 const priceUnit =
                     Number(
                         item.priceUnit ??
                         product?.priceUnit ??
                         1000
                     );
-
 
                 return sum +
                     (
@@ -2053,7 +1886,6 @@ function getCartTotal() {
                     );
 
             }
-
 
             return sum +
                 Number(item.price) *
@@ -2085,10 +1917,8 @@ function openPayment() {
 
     }
 
-
     const total =
         getCartTotal();
-
 
     document.getElementById(
         "payment-total"
@@ -2096,44 +1926,36 @@ function openPayment() {
         "$" +
         formatMoney(total);
 
-
     document.getElementById(
         "payment-method"
     ).value =
         "efectivo";
 
-
     cashBillHistory = [];
-
 
     document.getElementById(
         "cash-received"
     ).value = "";
-
 
     document.getElementById(
         "cash-change"
     ).textContent =
         "Vuelto: $0";
 
-
     document.getElementById(
         "cash-change"
     ).className =
         "payment-change-result invalid";
-
 
     document.getElementById(
         "cash-payment-box"
     ).style.display =
         "block";
 
-
     document.getElementById(
         "confirm-sale-btn"
     ).disabled =
         true;
-
 
     document.getElementById(
         "payment-modal"
@@ -2150,21 +1972,16 @@ function addCashBill(amount) {
             "cash-received"
         );
 
-
     const current =
         Number(input.value) || 0;
-
 
     const newAmount =
         current + amount;
 
-
     cashBillHistory.push(amount);
-
 
     input.value =
         newAmount;
-
 
     calculateChange();
 
@@ -2181,20 +1998,16 @@ function removeLastCashBill() {
 
     }
 
-
     const lastAmount =
         cashBillHistory.pop();
-
 
     const input =
         document.getElementById(
             "cash-received"
         );
 
-
     const current =
         Number(input.value) || 0;
-
 
     const newAmount =
         Math.max(
@@ -2202,10 +2015,8 @@ function removeLastCashBill() {
             current - lastAmount
         );
 
-
     input.value =
         newAmount;
-
 
     calculateChange();
 
@@ -2216,11 +2027,9 @@ function clearCashReceived() {
 
     cashBillHistory = [];
 
-
     document.getElementById(
         "cash-received"
     ).value = "";
-
 
     calculateChange();
 
@@ -2232,22 +2041,18 @@ function calculateChange() {
     const total =
         getCartTotal();
 
-
     const input =
         document.getElementById(
             "cash-received"
         );
 
-
     const received =
         Number(input.value);
-
 
     const changeLabel =
         document.getElementById(
             "cash-change"
         );
-
 
     const confirmButton =
         document.getElementById(
@@ -2271,7 +2076,6 @@ function calculateChange() {
                     : 0
             );
 
-
         changeLabel.textContent =
             "Faltan: $" +
             formatMoney(
@@ -2281,14 +2085,11 @@ function calculateChange() {
                 )
             );
 
-
         changeLabel.className =
             "payment-change-result invalid";
 
-
         confirmButton.disabled =
             true;
-
 
         return false;
 
@@ -2308,14 +2109,11 @@ function calculateChange() {
         "Vuelto: $" +
         formatMoney(change);
 
-
     changeLabel.className =
         "payment-change-result valid";
 
-
     confirmButton.disabled =
         false;
-
 
     return true;
 
@@ -2329,12 +2127,10 @@ function updatePaymentMethod() {
             "payment-method"
         ).value;
 
-
     const cashBox =
         document.getElementById(
             "cash-payment-box"
         );
-
 
     const confirmButton =
         document.getElementById(
@@ -2342,21 +2138,20 @@ function updatePaymentMethod() {
         );
 
 
-    if (method === "efectivo") {
+    if (
+        method ===
+        "efectivo"
+    ) {
 
         cashBox.style.display =
             "block";
 
-
         calculateChange();
 
-    }
-
-    else {
+    } else {
 
         cashBox.style.display =
             "none";
-
 
         confirmButton.disabled =
             false;
@@ -2378,10 +2173,8 @@ function confirmSale() {
 
     }
 
-
     const total =
         getCartTotal();
-
 
     const paymentMethod =
         document.getElementById(
@@ -2408,14 +2201,12 @@ function confirmSale() {
 
         }
 
-
         cashReceived =
             Number(
                 document.getElementById(
                     "cash-received"
                 ).value
             );
-
 
         cashChange =
             Math.round(
@@ -2454,14 +2245,15 @@ function confirmSale() {
                         p => p.id === item.id
                     );
 
-
                 const isWeight =
-                    item.saleType === "weight"
+                    item.saleType ===
+                    "weight"
                     ||
                     (
                         product
                         &&
-                        product.saleType === "weight"
+                        product.saleType ===
+                        "weight"
                     );
 
 
@@ -2474,14 +2266,12 @@ function confirmSale() {
                             0
                         );
 
-
                     const priceUnit =
                         Number(
                             item.priceUnit ??
                             product?.priceUnit ??
                             1000
                         );
-
 
                     return {
 
@@ -2552,31 +2342,23 @@ function confirmSale() {
 
     sales.push(sale);
 
-
     saveSales();
-
 
     cart = [];
 
-
     saveCart();
 
-
     updateCartUI();
-
 
     renderCatalog(
         getFilteredProducts()
     );
 
-
     closeModal(
         "payment-modal"
     );
 
-
     cashBillHistory = [];
-
 
     alert(
         "¡Venta registrada correctamente!"
@@ -2596,7 +2378,6 @@ function cancelSale(id) {
             s => s.id === id
         );
 
-
     if (
         !sale
         ||
@@ -2606,7 +2387,6 @@ function cancelSale(id) {
         return;
 
     }
-
 
     if (
         !confirm(
@@ -2618,10 +2398,8 @@ function cancelSale(id) {
 
     }
 
-
     sale.status =
         "anulada";
-
 
     sale.cancelledAt =
         new Date().toISOString();
@@ -2634,13 +2412,14 @@ function cancelSale(id) {
                 p => p.id === item.id
             );
 
-
         if (product) {
 
             if (
-                item.saleType === "weight"
+                item.saleType ===
+                "weight"
                 ||
-                product.saleType === "weight"
+                product.saleType ===
+                "weight"
             ) {
 
                 product.stock +=
@@ -2650,9 +2429,7 @@ function cancelSale(id) {
                         0
                     );
 
-            }
-
-            else {
+            } else {
 
                 product.stock +=
                     Number(item.quantity)
@@ -2668,11 +2445,9 @@ function cancelSale(id) {
     saveProducts();
     saveSales();
 
-
     renderCatalog(
         getFilteredProducts()
     );
-
 
     renderHistory();
 
@@ -2686,7 +2461,6 @@ function cancelSale(id) {
 function openHistory() {
 
     renderHistory();
-
 
     document.getElementById(
         "history-modal"
@@ -2702,7 +2476,6 @@ function renderHistory() {
         document.getElementById(
             "sales-history"
         );
-
 
     container.innerHTML = "";
 
@@ -2725,7 +2498,6 @@ function renderHistory() {
                 document.createElement(
                     "div"
                 );
-
 
             div.className =
                 "sale";
@@ -2769,7 +2541,6 @@ function renderHistory() {
                             `;
 
                         }
-
 
                         return `
                             ${escapeHTML(
@@ -2918,7 +2689,6 @@ function renderHistory() {
 
             `;
 
-
             container.appendChild(div);
 
         });
@@ -2933,7 +2703,6 @@ function renderHistory() {
 function openAdmin() {
 
     renderAdmin();
-
 
     document.getElementById(
         "admin-modal"
@@ -2955,7 +2724,6 @@ function getGroupName(group) {
 
     };
 
-
     return names[group]
         || "Sin grupo";
 
@@ -2969,7 +2737,6 @@ function renderAdmin() {
             "admin-products"
         );
 
-
     container.innerHTML = "";
 
 
@@ -2980,13 +2747,11 @@ function renderAdmin() {
                 "div"
             );
 
-
         div.className =
             "admin-product";
 
 
         let priceText;
-
 
         if (
             product.saleType ===
@@ -3000,15 +2765,12 @@ function renderAdmin() {
                     ? "100 g"
                     : "1 kg";
 
-
             priceText =
                 `$${formatMoney(
                     product.price
                 )} / ${unit}`;
 
-        }
-
-        else {
+        } else {
 
             priceText =
                 `$${formatMoney(
@@ -3020,7 +2782,6 @@ function renderAdmin() {
 
         let stockText;
 
-
         if (
             product.saleType ===
             "weight"
@@ -3031,9 +2792,7 @@ function renderAdmin() {
                     product.stock
                 )}`;
 
-        }
-
-        else {
+        } else {
 
             stockText =
                 `${product.stock}`;
@@ -3046,12 +2805,6 @@ function renderAdmin() {
             "weight"
                 ? "Por peso"
                 : "Por unidad";
-
-
-        const groupText =
-            getGroupName(
-                product.group
-            );
 
 
         div.innerHTML = `
@@ -3070,7 +2823,9 @@ function renderAdmin() {
 
                     <small>
                         Grupo:
-                        ${groupText}
+                        ${getGroupName(
+                            product.group
+                        )}
                     </small>
 
                     <br>
@@ -3122,7 +2877,6 @@ function renderAdmin() {
 
         `;
 
-
         container.appendChild(div);
 
     });
@@ -3138,17 +2892,14 @@ function openNewProduct() {
 
     editingProductId = null;
 
-
     document.getElementById(
         "product-modal-title"
     ).textContent =
         "Nuevo producto";
 
-
     document.getElementById(
         "product-code"
     ).value = "";
-
 
     document.getElementById(
         "product-name"
@@ -3156,10 +2907,8 @@ function openNewProduct() {
 
 
     /*
-       Por defecto:
-
-       Grupo = Peso
-       Venta = Peso
+       Si el HTML ya tiene selector de grupo,
+       usamos el grupo actualmente seleccionado.
     */
 
     const groupSelect =
@@ -3167,19 +2916,29 @@ function openNewProduct() {
             "product-group"
         );
 
-
     if (groupSelect) {
 
         groupSelect.value =
-            "weight";
+            selectedProductGroup;
 
     }
 
 
-    document.getElementById(
-        "product-sale-type"
-    ).value =
-        "weight";
+    const saleTypeSelect =
+        document.getElementById(
+            "product-sale-type"
+        );
+
+    if (groupSelect) {
+
+        updateProductGroupOptions();
+
+    } else {
+
+        saleTypeSelect.value =
+            "unit";
+
+    }
 
 
     document.getElementById(
@@ -3187,40 +2946,30 @@ function openNewProduct() {
     ).value =
         "100";
 
-
     document.getElementById(
         "product-price"
     ).value = "";
-
 
     document.getElementById(
         "product-stock"
     ).value =
         "0";
 
-
     document.getElementById(
         "delete-product-btn"
     ).style.display =
         "none";
 
-
     document.getElementById(
         "product-code-status"
     ).textContent = "";
-
 
     document.getElementById(
         "product-code-status"
     ).className =
         "code-status";
 
-
-    updateProductGroupOptions();
-
-
     toggleWeightOptions();
-
 
     document.getElementById(
         "product-modal"
@@ -3236,14 +2985,13 @@ function openNewProductFromAdmin() {
         "admin-modal"
     );
 
-
     openNewProduct();
 
 }
 
 
 /* =========================================================
-   CAMBIO DE GRUPO DEL PRODUCTO
+   GRUPO DEL PRODUCTO
 ========================================================= */
 
 function updateProductGroupOptions() {
@@ -3253,120 +3001,38 @@ function updateProductGroupOptions() {
             "product-group"
         );
 
-
-    if (!groupSelect) {
-        return;
-    }
-
-
-    const group =
-        groupSelect.value;
-
-
     const saleTypeSelect =
         document.getElementById(
             "product-sale-type"
         );
 
+    if (
+        !groupSelect
+        ||
+        !saleTypeSelect
+    ) {
 
-    if (!saleTypeSelect) {
         return;
+
     }
 
+    const group =
+        groupSelect.value;
 
-    /*
-       Peso → venta por peso
-
-       Unidad chica → venta por unidad
-
-       Unidad → venta por unidad
-    */
 
     if (group === "weight") {
 
         saleTypeSelect.value =
             "weight";
 
-    }
-
-    else {
+    } else {
 
         saleTypeSelect.value =
             "unit";
 
     }
 
-
     toggleWeightOptions();
-
-
-    /*
-       Cambiamos también el texto del código
-       cuando el HTML tenga el label correspondiente.
-    */
-
-    const codeLabel =
-        document.querySelector(
-            '#product-code'
-        );
-
-
-    if (codeLabel) {
-        // No hacemos nada aquí.
-        // El label se actualizará desde
-        // updateProductCodeLabel().
-    }
-
-
-    updateProductCodeLabel();
-
-}
-
-
-/* =========================================================
-   TEXTO DEL CÓDIGO
-========================================================= */
-
-function updateProductCodeLabel() {
-
-    const groupSelect =
-        document.getElementById(
-            "product-group"
-        );
-
-
-    if (!groupSelect) {
-        return;
-    }
-
-
-    const label =
-        document.querySelector(
-            'label[for="product-code"]'
-        );
-
-
-    if (!label) {
-        return;
-    }
-
-
-    if (
-        groupSelect.value ===
-        "barcode"
-    ) {
-
-        label.textContent =
-            "Código de barras";
-
-    }
-
-    else {
-
-        label.textContent =
-            "Código interno";
-
-    }
 
 }
 
@@ -3382,25 +3048,20 @@ function openEditProduct(id) {
             p => p.id === id
         );
 
-
     if (!product) return;
-
 
     editingProductId =
         id;
-
 
     document.getElementById(
         "product-modal-title"
     ).textContent =
         "Editar producto";
 
-
     document.getElementById(
         "product-code"
     ).value =
         product.code;
-
 
     document.getElementById(
         "product-name"
@@ -3408,39 +3069,33 @@ function openEditProduct(id) {
         product.name;
 
 
-    const productGroup =
-        product.group
-        ||
-        (
-            product.saleType === "weight"
-                ? "weight"
-                : "barcode"
-        );
-
-
     const groupSelect =
         document.getElementById(
             "product-group"
         );
 
-
     if (groupSelect) {
 
         groupSelect.value =
-            productGroup;
+            product.group ||
+            (
+                product.saleType ===
+                "weight"
+                    ? "weight"
+                    : "barcode"
+            );
+
+        updateProductGroupOptions();
+
+    } else {
+
+        document.getElementById(
+            "product-sale-type"
+        ).value =
+            product.saleType ||
+            "unit";
 
     }
-
-
-    document.getElementById(
-        "product-sale-type"
-    ).value =
-        product.saleType ||
-        (
-            productGroup === "weight"
-                ? "weight"
-                : "unit"
-        );
 
 
     document.getElementById(
@@ -3449,38 +3104,28 @@ function openEditProduct(id) {
         product.priceUnit ||
         "1000";
 
-
     document.getElementById(
         "product-price"
     ).value =
         product.price;
-
 
     document.getElementById(
         "product-stock"
     ).value =
         product.stock;
 
-
     document.getElementById(
         "delete-product-btn"
     ).style.display =
         "block";
 
-
-    updateProductGroupOptions();
-
-
     toggleWeightOptions();
 
-
     validateProductCode();
-
 
     closeModal(
         "admin-modal"
     );
-
 
     document.getElementById(
         "product-modal"
@@ -3501,12 +3146,10 @@ function toggleWeightOptions() {
             "product-sale-type"
         ).value;
 
-
     const options =
         document.getElementById(
             "weight-options"
         );
-
 
     const stockLabel =
         document.getElementById(
@@ -3514,30 +3157,26 @@ function toggleWeightOptions() {
         );
 
 
-    if (saleType === "weight") {
+    if (
+        saleType ===
+        "weight"
+    ) {
 
         options.style.display =
             "block";
 
-
         stockLabel.textContent =
             "Stock disponible (gramos)";
 
-    }
-
-    else {
+    } else {
 
         options.style.display =
             "none";
-
 
         stockLabel.textContent =
             "Stock disponible";
 
     }
-
-
-    updateProductCodeLabel();
 
 }
 
@@ -3553,27 +3192,25 @@ function validateProductCode() {
             "product-code"
         );
 
-
     const status =
         document.getElementById(
             "product-code-status"
         );
 
-
     const code =
         input.value.trim();
 
-
     status.textContent =
         "";
-
 
     status.className =
         "code-status";
 
 
     if (!code) {
+
         return false;
+
     }
 
 
@@ -3593,11 +3230,9 @@ function validateProductCode() {
         status.textContent =
             "⚠️ Este código ya está registrado.";
 
-
         status.classList.add(
             "duplicate"
         );
-
 
         return false;
 
@@ -3607,11 +3242,9 @@ function validateProductCode() {
     status.textContent =
         "✅ Código disponible";
 
-
     status.classList.add(
         "available"
     );
-
 
     return true;
 
@@ -3629,58 +3262,15 @@ function saveProduct() {
             "product-code"
         ).value.trim();
 
-
     const name =
         document.getElementById(
             "product-name"
         ).value.trim();
 
-
-    const groupSelect =
-        document.getElementById(
-            "product-group"
-        );
-
-
-    /*
-       Si el HTML todavía no tiene el selector,
-       usamos weight como valor temporal.
-    */
-
-    const group =
-        groupSelect
-            ? groupSelect.value
-            : "weight";
-
-
-    let saleType =
+    const saleType =
         document.getElementById(
             "product-sale-type"
         ).value;
-
-
-    /*
-       El grupo determina el tipo de venta.
-
-       Peso          → weight
-       Unidad chica  → unit
-       Unidad        → unit
-    */
-
-    if (group === "weight") {
-
-        saleType =
-            "weight";
-
-    }
-
-    else {
-
-        saleType =
-            "unit";
-
-    }
-
 
     const price =
         Number(
@@ -3689,14 +3279,12 @@ function saveProduct() {
             ).value
         );
 
-
     const stock =
         Number(
             document.getElementById(
                 "product-stock"
             ).value
         );
-
 
     const priceUnit =
         Number(
@@ -3706,12 +3294,44 @@ function saveProduct() {
         );
 
 
+    /*
+       Grupo:
+
+       Si el HTML ya tiene selector,
+       lo usamos.
+
+       Si todavía no lo tiene,
+       mantenemos compatibilidad.
+    */
+
+    const groupSelect =
+        document.getElementById(
+            "product-group"
+        );
+
+    let group;
+
+
+    if (groupSelect) {
+
+        group =
+            groupSelect.value;
+
+    } else {
+
+        group =
+            saleType === "weight"
+                ? "weight"
+                : "barcode";
+
+    }
+
+
     if (!code || !name) {
 
         alert(
             "Completá código y nombre."
         );
-
 
         return;
 
@@ -3728,6 +3348,49 @@ function saveProduct() {
             "Precio y stock no pueden ser negativos."
         );
 
+        return;
+
+    }
+
+
+    /*
+       El grupo weight siempre debe
+       corresponder a venta por peso.
+    */
+
+    if (
+        group === "weight"
+        &&
+        saleType !== "weight"
+    ) {
+
+        alert(
+            "El grupo Peso debe utilizar venta por peso."
+        );
+
+        return;
+
+    }
+
+
+    /*
+       Los grupos small y barcode
+       son productos por unidad.
+    */
+
+    if (
+        (
+            group === "small"
+            ||
+            group === "barcode"
+        )
+        &&
+        saleType !== "unit"
+    ) {
+
+        alert(
+            "Este grupo debe utilizar venta por unidad."
+        );
 
         return;
 
@@ -3746,7 +3409,6 @@ function saveProduct() {
             "Seleccioná si el precio corresponde a 100 g o 1 kg."
         );
 
-
         return;
 
     }
@@ -3758,41 +3420,35 @@ function saveProduct() {
             "Ya existe un producto con ese código."
         );
 
-
         return;
 
     }
 
 
     /* =========================================
-       NUEVO PRODUCTO
+       NUEVO
     ========================================= */
 
     if (
-        editingProductId === null
+        editingProductId ===
+        null
     ) {
 
         const newProduct = {
 
             id: Date.now(),
 
-            code:
-                code,
+            code: code,
 
-            name:
-                name,
+            name: name,
 
-            price:
-                price,
+            price: price,
 
-            stock:
-                stock,
+            stock: stock,
 
-            saleType:
-                saleType,
+            saleType: saleType,
 
-            group:
-                group
+            group: group
 
         };
 
@@ -3816,7 +3472,7 @@ function saveProduct() {
 
 
     /* =========================================
-       EDITAR PRODUCTO
+       EDITAR
     ========================================= */
 
     else {
@@ -3828,31 +3484,23 @@ function saveProduct() {
                     editingProductId
             );
 
-
-        if (!product) {
-            return;
-        }
+        if (!product) return;
 
 
         product.code =
             code;
 
-
         product.name =
             name;
-
 
         product.price =
             price;
 
-
         product.stock =
             stock;
 
-
         product.saleType =
             saleType;
-
 
         product.group =
             group;
@@ -3866,19 +3514,12 @@ function saveProduct() {
             product.priceUnit =
                 priceUnit;
 
-        }
-
-        else {
+        } else {
 
             delete product.priceUnit;
 
         }
 
-
-        /*
-           Actualizar producto que ya esté
-           dentro del carrito.
-        */
 
         const cartItem =
             cart.find(
@@ -3893,18 +3534,14 @@ function saveProduct() {
             cartItem.code =
                 code;
 
-
             cartItem.name =
                 name;
-
 
             cartItem.price =
                 price;
 
-
             cartItem.saleType =
                 saleType;
-
 
             cartItem.group =
                 group;
@@ -3918,14 +3555,11 @@ function saveProduct() {
                 cartItem.priceUnit =
                     priceUnit;
 
-            }
-
-            else {
+            } else {
 
                 delete cartItem.priceUnit;
 
             }
-
 
             saveCart();
 
@@ -3936,41 +3570,15 @@ function saveProduct() {
 
     saveProducts();
 
-
     closeModal(
         "product-modal"
     );
-
 
     renderCatalog(
         getFilteredProducts()
     );
 
-
     updateCartUI();
-
-
-    /*
-       Si estaba abierto el administrador,
-       lo actualizamos.
-    */
-
-    const adminModal =
-        document.getElementById(
-            "admin-modal"
-        );
-
-
-    if (
-        adminModal
-        &&
-        adminModal.style.display ===
-            "flex"
-    ) {
-
-        renderAdmin();
-
-    }
 
 }
 
@@ -4005,7 +3613,6 @@ function deleteProduct() {
             "No podés eliminar un producto que está en el carrito."
         );
 
-
         return;
 
     }
@@ -4029,14 +3636,11 @@ function deleteProduct() {
                 editingProductId
         );
 
-
     saveProducts();
-
 
     closeModal(
         "product-modal"
     );
-
 
     renderCatalog(
         getFilteredProducts()
@@ -4060,7 +3664,7 @@ function closeModal(id) {
 
 
 /* =========================================================
-   FILTRAR PRODUCTOS
+   FILTRO FINAL DEL CATÁLOGO
 ========================================================= */
 
 function getFilteredProducts() {
@@ -4069,7 +3673,6 @@ function getFilteredProducts() {
         document.getElementById(
             "search"
         );
-
 
     const query =
         searchInput
@@ -4081,39 +3684,43 @@ function getFilteredProducts() {
 
     /*
        PRIMERO:
-       seleccionamos el grupo.
+       seleccionar grupo.
 
        DESPUÉS:
-       aplicamos la búsqueda.
+       aplicar búsqueda.
     */
 
-    let filtered =
-        products.filter(
-            product =>
+    return products.filter(
+        product => {
+
+            const productGroup =
+                product.group ||
                 (
-                    product.group
-                    ||
-                    (
-                        product.saleType === "weight"
-                            ? "weight"
-                            : "barcode"
-                    )
-                )
-                ===
+                    product.saleType ===
+                    "weight"
+                        ? "weight"
+                        : "barcode"
+                );
+
+
+            if (
+                productGroup !==
                 selectedProductGroup
-        );
+            ) {
+
+                return false;
+
+            }
 
 
-    if (!query) {
+            if (!query) {
 
-        return filtered;
+                return true;
 
-    }
+            }
 
 
-    filtered =
-        filtered.filter(
-            product =>
+            return (
 
                 product.name
                     .toLowerCase()
@@ -4125,17 +3732,13 @@ function getFilteredProducts() {
                     .toLowerCase()
                     .includes(query)
 
-        );
+            );
 
-
-    return filtered;
+        }
+    );
 
 }
 
-
-/* =========================================================
-   FORMATO DINERO
-========================================================= */
 
 function formatMoney(value) {
 
@@ -4151,10 +3754,6 @@ function formatMoney(value) {
 }
 
 
-/* =========================================================
-   FORMATO PESO
-========================================================= */
-
 function formatWeight(value) {
 
     return Number(value)
@@ -4165,25 +3764,18 @@ function formatWeight(value) {
 }
 
 
-/* =========================================================
-   MEDIOS DE PAGO
-========================================================= */
-
 function paymentName(method) {
 
     const names = {
 
-        efectivo:
-            "Efectivo",
+        efectivo: "Efectivo",
 
-        debito:
-            "Débito",
+        debito: "Débito",
 
         transferencia:
             "Transferencia"
 
     };
-
 
     return names[method]
         ||
@@ -4193,10 +3785,6 @@ function paymentName(method) {
 
 }
 
-
-/* =========================================================
-   ESCAPAR HTML
-========================================================= */
 
 function escapeHTML(text) {
 
@@ -4241,7 +3829,6 @@ function toggleCart() {
             "cart"
         );
 
-
     const arrow =
         document.getElementById(
             "cart-arrow"
@@ -4270,6 +3857,5 @@ function toggleCart() {
 renderCatalog(
     getFilteredProducts()
 );
-
 
 updateCartUI();
