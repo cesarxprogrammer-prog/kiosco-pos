@@ -573,7 +573,7 @@ async function buscarCodigo() {
 
                 }
 
-            }, 1000);
+            }, 3000);
 
         }
 
