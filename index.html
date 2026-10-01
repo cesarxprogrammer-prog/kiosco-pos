@@ -511,8 +511,6 @@ body {
 
 <body>
 
-<!-- ========================= BARRA SUPERIOR ========================= -->
-
 <div class="topbar">
 
     <h1>🛒 Kiosco POS</h1>
@@ -563,8 +561,6 @@ body {
 
 <div class="main">
 
-    <!-- ========================= CATÁLOGO ========================= -->
-
     <section class="catalog">
 
         <div
@@ -573,8 +569,6 @@ body {
         ></div>
 
     </section>
-
-    <!-- ========================= CARRITO ========================= -->
 
     <section
         id="cart"
@@ -625,8 +619,6 @@ body {
 
 </div>
 
-<!-- ========================= SCANNER ========================= -->
-
 <div
     id="scanner-modal"
     class="modal-bg"
@@ -673,8 +665,6 @@ body {
     </div>
 
 </div>
-
-<!-- ========================= MODAL PRODUCTO ========================= -->
 
 <div
     id="product-modal"
@@ -838,8 +828,6 @@ body {
 
 </div>
 
-<!-- ========================= ADMIN ========================= -->
-
 <div
     id="admin-modal"
     class="modal-bg"
@@ -875,8 +863,6 @@ body {
 
 </div>
 
-<!-- ========================= HISTORIAL ========================= -->
-
 <div
     id="history-modal"
     class="modal-bg"
@@ -904,8 +890,6 @@ body {
     </div>
 
 </div>
-
-<!-- ========================= PAGO ========================= -->
 
 <div
     id="payment-modal"
@@ -1182,24 +1166,72 @@ async function openScanner(mode = "sale") {
 
             });
 
+
+        /*
+         * SOLICITAR LA MAYOR RESOLUCIÓN POSIBLE
+         *
+         * "ideal" solicita una resolución alta,
+         * pero el navegador puede entregar la máxima
+         * que soporte realmente la cámara.
+         */
+
         scannerStream =
             await navigator.mediaDevices.getUserMedia({
 
                 video: {
-                    facingMode: "environment"
+
+                    facingMode: {
+                        ideal: "environment"
+                    },
+
+                    width: {
+                        ideal: 4096
+                    },
+
+                    height: {
+                        ideal: 2160
+                    },
+
+                    aspectRatio: {
+                        ideal: 16 / 9
+                    },
+
+                    resizeMode: "none"
+
                 },
 
                 audio: false
 
             });
 
+
         video.srcObject =
             scannerStream;
+
+
+        /*
+         * Mostrar la resolución REAL obtenida.
+         */
+
+        const track =
+            scannerStream.getVideoTracks()[0];
+
+        const settings =
+            track.getSettings();
+
+        console.log(
+            "Resolución real de cámara:",
+            settings.width,
+            "x",
+            settings.height
+        );
+
 
         scannerActive = true;
 
         status.textContent =
             "🟢 Buscando código...";
+
 
         buscarCodigo();
 
@@ -1414,10 +1446,6 @@ function saveSales() {
 
 function exportData() {
 
-    /*
-       Creamos una copia de las ventas
-       únicamente para exportar.
-    */
     const exportedSales =
         sales.map(sale => ({
 
@@ -1742,8 +1770,6 @@ function addToCart(id) {
     }
 
 
-    /* PRODUCTO POR PESO */
-
     if (product.saleType === "weight") {
 
         const existing =
@@ -1812,8 +1838,6 @@ function addToCart(id) {
 
     }
 
-
-    /* PRODUCTO POR UNIDAD */
 
     const existing =
         cart.find(
@@ -2280,8 +2304,6 @@ function updateCartUI() {
         let subtotal;
 
 
-        /* CALCULAR SUBTOTAL */
-
         if (isWeight) {
 
             const weight =
@@ -2321,10 +2343,6 @@ function updateCartUI() {
         div.className =
             "cart-item";
 
-
-        /* =========================
-           PRODUCTO POR PESO
-        ========================= */
 
         if (isWeight) {
 
@@ -2416,14 +2434,7 @@ function updateCartUI() {
 
             `;
 
-        }
-
-
-        /* =========================
-           PRODUCTO POR UNIDAD
-        ========================= */
-
-        else {
+        } else {
 
             div.innerHTML = `
 
@@ -2467,8 +2478,6 @@ function updateCartUI() {
                         +
                     </button>
 
-                    <!-- SUBTOTAL -->
-
                     <strong>
                         $${formatMoney(subtotal)}
                     </strong>
@@ -2494,8 +2503,6 @@ function updateCartUI() {
 
     });
 
-
-    /* TOTAL GENERAL */
 
     totalLabel.textContent =
         "$" + formatMoney(total);
