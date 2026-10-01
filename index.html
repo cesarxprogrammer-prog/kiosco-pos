@@ -1,14 +1,27 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
 <title>Kiosco POS</title>
 
-<link rel="stylesheet" href="style.css">
+<link
+    rel="stylesheet"
+    href="style.css"
+>
+
 </head>
 
+
 <body>
+
 
 <div class="topbar">
 
@@ -58,26 +71,66 @@
 
 </div>
 
+
 <div class="main">
 
+
     <section class="catalog">
+
+
+        <!-- =========================================
+             GRUPOS DE PRODUCTOS
+        ========================================== -->
+
+        <div class="product-groups">
+
+            <button
+                id="group-weight"
+                class="group-btn active"
+                onclick="selectProductGroup('weight')"
+            >
+                ⚖️ Peso
+            </button>
+
+            <button
+                id="group-small"
+                class="group-btn"
+                onclick="selectProductGroup('small')"
+            >
+                🍬 Unidad chica
+            </button>
+
+            <button
+                id="group-barcode"
+                class="group-btn"
+                onclick="selectProductGroup('barcode')"
+            >
+                📦 Unidad
+            </button>
+
+        </div>
+
 
         <div
             id="products"
             class="products-grid"
         ></div>
 
+
     </section>
+
 
     <section
         id="cart"
         class="cart"
     >
 
+
         <div
             class="cart-title"
             onclick="toggleCart()"
         >
+
             🛒 Carrito
 
             <span id="cart-count">
@@ -100,6 +153,7 @@
 
         </div>
 
+
         <button
             id="checkout-btn"
             class="checkout"
@@ -109,14 +163,23 @@
             Registrar venta
         </button>
 
+
         <div
             id="cart-items"
             class="cart-items"
         ></div>
 
+
     </section>
 
+
 </div>
+
+
+
+<!-- =============================================
+     SCANNER
+============================================= -->
 
 <div
     id="scanner-modal"
@@ -125,14 +188,17 @@
 
     <div class="modal">
 
+
         <h2>
             📷 Escanear producto
         </h2>
+
 
         <div
             id="scanner-product-message"
             class="scanner-product-message"
         ></div>
+
 
         <video
             id="scanner-video"
@@ -141,6 +207,7 @@
             playsinline
         ></video>
 
+
         <div
             id="scanner-status"
             class="scanner-status"
@@ -148,12 +215,14 @@
             Iniciando cámara...
         </div>
 
+
         <div
             id="scanner-code"
             class="scanner-code"
         >
             Código: —
         </div>
+
 
         <div class="modal-actions">
 
@@ -166,9 +235,16 @@
 
         </div>
 
+
     </div>
 
 </div>
+
+
+
+<!-- =============================================
+     PRODUCTO
+============================================= -->
 
 <div
     id="product-modal"
@@ -177,15 +253,50 @@
 
     <div class="modal">
 
+
         <h2 id="product-modal-title">
             Nuevo producto
         </h2>
 
+
+        <!-- GRUPO -->
+
         <div class="form-group">
 
             <label>
+                Grupo
+            </label>
+
+            <select
+                id="product-group"
+                onchange="updateProductGroupOptions()"
+            >
+
+                <option value="weight">
+                    ⚖️ Peso
+                </option>
+
+                <option value="small">
+                    🍬 Unidad chica
+                </option>
+
+                <option value="barcode">
+                    📦 Unidad
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- CÓDIGO -->
+
+        <div class="form-group">
+
+            <label id="product-code-label">
                 Código
             </label>
+
 
             <div class="code-input-row">
 
@@ -193,6 +304,7 @@
                     id="product-code"
                     oninput="validateProductCode()"
                 >
+
 
                 <button
                     type="button"
@@ -204,12 +316,17 @@
 
             </div>
 
+
             <div
                 id="product-code-status"
                 class="code-status"
             ></div>
 
+
         </div>
+
+
+        <!-- NOMBRE -->
 
         <div class="form-group">
 
@@ -217,9 +334,16 @@
                 Nombre
             </label>
 
-            <input id="product-name">
+            <input
+                id="product-name"
+            >
 
         </div>
+
+
+        <!-- TIPO DE VENTA
+             Se mantiene para compatibilidad con el JS
+        -->
 
         <div class="form-group">
 
@@ -244,10 +368,14 @@
 
         </div>
 
+
+        <!-- OPCIONES DE PESO -->
+
         <div
             id="weight-options"
             style="display:none"
         >
+
 
             <div class="form-group">
 
@@ -255,7 +383,10 @@
                     Precio expresado en
                 </label>
 
-                <select id="product-price-unit">
+
+                <select
+                    id="product-price-unit"
+                >
 
                     <option value="100">
                         100 g
@@ -269,13 +400,18 @@
 
             </div>
 
+
         </div>
+
+
+        <!-- PRECIO -->
 
         <div class="form-group">
 
             <label>
                 Precio
             </label>
+
 
             <input
                 id="product-price"
@@ -286,11 +422,15 @@
 
         </div>
 
+
+        <!-- STOCK -->
+
         <div class="form-group">
 
             <label id="stock-label">
                 Stock disponible
             </label>
+
 
             <input
                 id="product-stock"
@@ -301,7 +441,11 @@
 
         </div>
 
+
+        <!-- ACCIONES -->
+
         <div class="modal-actions">
+
 
             <button
                 class="btn-secondary"
@@ -310,12 +454,14 @@
                 Cancelar
             </button>
 
+
             <button
                 class="btn-primary"
                 onclick="saveProduct()"
             >
                 Guardar
             </button>
+
 
             <button
                 id="delete-product-btn"
@@ -326,11 +472,19 @@
                 Eliminar
             </button>
 
+
         </div>
+
 
     </div>
 
 </div>
+
+
+
+<!-- =============================================
+     ADMINISTRACIÓN
+============================================= -->
 
 <div
     id="admin-modal"
@@ -339,13 +493,17 @@
 
     <div class="modal">
 
+
         <h2>
             ⚙️ Administración
         </h2>
 
+
         <div id="admin-products"></div>
 
+
         <div class="modal-actions">
+
 
             <button
                 class="btn-secondary"
@@ -354,6 +512,7 @@
                 Cerrar
             </button>
 
+
             <button
                 class="btn-primary"
                 onclick="openNewProductFromAdmin()"
@@ -361,11 +520,19 @@
                 ＋ Nuevo producto
             </button>
 
+
         </div>
+
 
     </div>
 
 </div>
+
+
+
+<!-- =============================================
+     HISTORIAL
+============================================= -->
 
 <div
     id="history-modal"
@@ -374,13 +541,17 @@
 
     <div class="modal">
 
+
         <h2>
             📋 Historial de ventas
         </h2>
 
+
         <div id="sales-history"></div>
 
+
         <div class="modal-actions">
+
 
             <button
                 class="btn-secondary"
@@ -389,11 +560,19 @@
                 Cerrar
             </button>
 
+
         </div>
+
 
     </div>
 
 </div>
+
+
+
+<!-- =============================================
+     PAGO
+============================================= -->
 
 <div
     id="payment-modal"
@@ -402,9 +581,11 @@
 
     <div class="modal">
 
+
         <h2>
             💳 Registrar venta
         </h2>
+
 
         <div class="payment-box">
 
@@ -418,11 +599,13 @@
 
         </div>
 
+
         <div class="form-group">
 
             <label>
                 Medio de pago
             </label>
+
 
             <select
                 id="payment-method"
@@ -445,16 +628,19 @@
 
         </div>
 
+
         <div
             id="cash-payment-box"
             class="payment-change"
         >
+
 
             <div class="form-group">
 
                 <label>
                     Monto recibido
                 </label>
+
 
                 <input
                     id="cash-received"
@@ -465,7 +651,9 @@
                     oninput="calculateChange()"
                 >
 
+
                 <div class="cash-bills">
+
 
                     <button
                         type="button"
@@ -475,6 +663,7 @@
                         $100
                     </button>
 
+
                     <button
                         type="button"
                         class="cash-bill"
@@ -482,6 +671,7 @@
                     >
                         $200
                     </button>
+
 
                     <button
                         type="button"
@@ -491,6 +681,7 @@
                         $500
                     </button>
 
+
                     <button
                         type="button"
                         class="cash-bill"
@@ -498,6 +689,7 @@
                     >
                         $1.000
                     </button>
+
 
                     <button
                         type="button"
@@ -507,6 +699,7 @@
                         $2.000
                     </button>
 
+
                     <button
                         type="button"
                         class="cash-bill"
@@ -514,6 +707,7 @@
                     >
                         $10.000
                     </button>
+
 
                     <button
                         type="button"
@@ -523,9 +717,12 @@
                         $20.000
                     </button>
 
+
                 </div>
 
+
                 <div class="cash-controls">
+
 
                     <button
                         type="button"
@@ -535,6 +732,7 @@
                         ↩ Borrar último
                     </button>
 
+
                     <button
                         type="button"
                         class="cash-control danger"
@@ -543,9 +741,12 @@
                         🗑 Limpiar
                     </button>
 
+
                 </div>
 
+
             </div>
+
 
             <div
                 id="cash-change"
@@ -554,9 +755,12 @@
                 Vuelto: $0
             </div>
 
+
         </div>
 
+
         <div class="modal-actions">
+
 
             <button
                 class="btn-secondary"
@@ -564,6 +768,7 @@
             >
                 Cancelar
             </button>
+
 
             <button
                 id="confirm-sale-btn"
@@ -574,13 +779,18 @@
                 Confirmar venta
             </button>
 
+
         </div>
+
 
     </div>
 
 </div>
 
+
+
 <script src="script.js"></script>
 
 </body>
+
 </html>
