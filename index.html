@@ -127,7 +127,6 @@ body{
     padding:15px;
     display:flex;
     flex-direction:column;
-    min-height:0;
 }
 
 .cart-title{
@@ -139,7 +138,6 @@ body{
 
 .cart-items{
     flex:1;
-    min-height:0;
     overflow-y:auto;
 }
 
@@ -196,7 +194,6 @@ body{
 .cart-summary{
     border-top:2px solid #333;
     padding-top:12px;
-    flex-shrink:0;
 }
 
 .total-row{
@@ -230,22 +227,8 @@ body{
     display:none;
     align-items:center;
     justify-content:center;
+    z-index:10;
     padding:15px;
-    z-index:10;
-}
-
-#scanner-modal{
-    z-index:100;
-}
-
-#payment-modal{
-    z-index:50;
-}
-
-#product-modal,
-#admin-modal,
-#history-modal{
-    z-index:10;
 }
 
 .modal{
@@ -473,9 +456,6 @@ body{
         border-left:0;
         border-top:2px solid #333;
         padding:10px;
-        display:flex;
-        flex-direction:column;
-        min-height:0;
     }
 
     .cart.expanded{
@@ -1105,10 +1085,8 @@ async function openScanner(mode = "sale"){
         scannerStream =
             await navigator.mediaDevices.getUserMedia({
 
-                video: {
-        facingMode: { ideal: "environment" },
-        width: { ideal: 4096 },
-        height: { ideal: 2160 }
+                video:{
+                    facingMode:"environment"
                 },
 
                 audio:false
