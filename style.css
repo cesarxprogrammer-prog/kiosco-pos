@@ -450,11 +450,11 @@ body {
 /* SCANNER */
 
 .scanner-video {
-    width: 100%;
+    width: 50%;
     display: block;
     background: #000;
     border-radius: 10px;
-    margin-bottom: 12px;
+    margin: 0 auto 12px auto;
 }
 
 .scanner-product-message {
