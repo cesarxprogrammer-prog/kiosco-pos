@@ -583,3 +583,59 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* =========================================================
+   GRUPOS DE PRODUCTOS
+========================================================= */
+
+.product-groups {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.group-btn {
+    flex: 1;
+    border: 0;
+    border-radius: 8px;
+    padding: 11px 8px;
+    background: #333;
+    color: #f1f1f1;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.group-btn.active {
+    background: #198754;
+}
+
+.group-btn:hover {
+    opacity: 0.9;
+}
+
+
+/* =========================================================
+   SELECTOR DE GRUPO — PRODUCTO
+========================================================= */
+
+#product-group {
+    width: 100%;
+}
+
+
+/* =========================================================
+   MÓVIL
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .product-groups {
+        gap: 5px;
+    }
+
+    .group-btn {
+        font-size: 13px;
+        padding: 10px 5px;
+    }
+
+}
