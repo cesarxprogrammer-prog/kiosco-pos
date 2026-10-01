@@ -531,21 +531,28 @@ body{
 >
 
     <div
-        class="cart-title"
-        onclick="toggleCart()"
-    >
-        🛒 Carrito
+    class="cart-title"
+    onclick="toggleCart()"
+>
+    🛒 Carrito
 
-        <span id="cart-count">
-            0
+    <span id="cart-count">
+        0
+    </span>
+
+    <span style="float:right">
+
+        <span id="total-amount">
+            $0
         </span>
 
-        <span
-            id="cart-arrow"
-            style="float:right"
-        >
+        &nbsp;
+
+        <span id="cart-arrow">
             ⌃
         </span>
+
+    </span>
 
     </div>
 
@@ -572,17 +579,15 @@ body{
 
     <div class="cart-summary">
 
-        <div class="total-row">
+    <button
+        id="checkout-btn"
+        class="checkout"
+        onclick="openPayment()"
+    >
+        Registrar venta
+    </button>
 
-            <span>Total</span>
-
-            <span id="total-amount">
-                $0
-            </span>
-
-        </div>
-
-    </div>
+</div>
 
 </section>
 
