@@ -736,10 +736,10 @@ body {
         <div class="modal-actions">
 
             <button
-                class="btn-secondary"
+                class="btn-primary"
                 onclick="closeScanner()"
             >
-                Cerrar
+                OK
             </button>
 
         </div>
@@ -1301,6 +1301,9 @@ let scannerActive = false;
 let barcodeDetector = null;
 let scannerMode = "sale";
 
+let lastDetectedCode = null;
+let scannerCooldown = false;
+
 
 async function openScanner(mode = "sale") {
 
@@ -1331,14 +1334,19 @@ async function openScanner(mode = "sale") {
     } else {
 
         title.textContent =
-            "📷 Escanear producto";
+            "📷 Escanear productos";
 
     }
 
     codeLabel.textContent =
         "Código: —";
 
+    status.textContent =
+        "Iniciando cámara...";
+
     scannerActive = false;
+    scannerCooldown = false;
+    lastDetectedCode = null;
 
     if (!("BarcodeDetector" in window)) {
 
@@ -1416,7 +1424,9 @@ async function openScanner(mode = "sale") {
         scannerActive = true;
 
         status.textContent =
-            "🟢 Buscando código...";
+            scannerMode === "sale"
+                ? "🟢 Buscando producto..."
+                : "🟢 Buscando código...";
 
 
         buscarCodigo();
@@ -1443,7 +1453,9 @@ function openProductScanner() {
 
 async function buscarCodigo() {
 
-    if (!scannerActive) return;
+    if (!scannerActive) {
+        return;
+    }
 
     const video =
         document.getElementById("scanner-video");
@@ -1453,25 +1465,55 @@ async function buscarCodigo() {
         const barcodes =
             await barcodeDetector.detect(video);
 
-        if (barcodes.length > 0) {
+        if (
+            barcodes.length > 0
+            &&
+            !scannerCooldown
+        ) {
 
             const codigo =
                 barcodes[0].rawValue;
 
-            scannerActive = false;
+
+            if (
+                codigo === lastDetectedCode
+            ) {
+
+                requestAnimationFrame(
+                    buscarCodigo
+                );
+
+                return;
+
+            }
+
+
+            lastDetectedCode =
+                codigo;
+
+            scannerCooldown = true;
+
 
             document.getElementById(
                 "scanner-code"
             ).textContent =
                 "Código: " + codigo;
 
-            if (scannerMode === "product") {
+
+            /* =========================================
+               MODO PRODUCTO
+            ========================================= */
+
+            if (
+                scannerMode === "product"
+            ) {
 
                 detenerScanner();
 
                 document.getElementById(
                     "product-code"
-                ).value = codigo;
+                ).value =
+                    codigo;
 
                 validateProductCode();
 
@@ -1481,14 +1523,19 @@ async function buscarCodigo() {
                     "✅ Código leído";
 
                 setTimeout(() => {
+
                     closeScanner();
+
                 }, 500);
 
                 return;
 
             }
 
-            detenerScanner();
+
+            /* =========================================
+               MODO VENTA
+            ========================================= */
 
             const product =
                 products.find(
@@ -1496,6 +1543,7 @@ async function buscarCodigo() {
                         String(p.code) ===
                         String(codigo)
                 );
+
 
             if (!product) {
 
@@ -1509,11 +1557,11 @@ async function buscarCodigo() {
                     + codigo
                 );
 
-                return;
-
             }
 
-            if (product.stock <= 0) {
+            else if (
+                product.stock <= 0
+            ) {
 
                 document.getElementById(
                     "scanner-status"
@@ -1525,22 +1573,46 @@ async function buscarCodigo() {
                     " no tiene stock disponible."
                 );
 
-                return;
-
             }
 
-            document.getElementById(
-                "scanner-status"
-            ).textContent =
-                "✅ Producto encontrado";
+            else {
 
-            addToCart(product.id);
+                /*
+                 * Agregar al carrito.
+                 * La cámara permanece abierta.
+                 */
+
+                addToCart(product.id);
+
+                document.getElementById(
+                    "scanner-status"
+                ).textContent =
+                    "✅ " +
+                    product.name +
+                    " agregado. Buscando otro...";
+            }
+
+
+            /*
+             * Espera un segundo antes de
+             * aceptar otro código.
+             */
 
             setTimeout(() => {
-                closeScanner();
-            }, 500);
 
-            return;
+                scannerCooldown = false;
+                lastDetectedCode = null;
+
+                if (scannerActive) {
+
+                    document.getElementById(
+                        "scanner-status"
+                    ).textContent =
+                        "🟢 Buscando producto...";
+
+                }
+
+            }, 1000);
 
         }
 
@@ -1550,7 +1622,14 @@ async function buscarCodigo() {
 
     }
 
-    requestAnimationFrame(buscarCodigo);
+
+    if (scannerActive) {
+
+        requestAnimationFrame(
+            buscarCodigo
+        );
+
+    }
 
 }
 
@@ -1558,6 +1637,9 @@ async function buscarCodigo() {
 function detenerScanner() {
 
     scannerActive = false;
+
+    scannerCooldown = false;
+    lastDetectedCode = null;
 
     if (scannerStream) {
 
@@ -1587,7 +1669,8 @@ function closeScanner() {
 
     document.getElementById(
         "scanner-modal"
-    ).style.display = "none";
+    ).style.display =
+        "none";
 
 }
 
