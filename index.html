@@ -270,7 +270,7 @@ body {
 
 #scanner-modal {
     z-index: 20;
-    }
+}
 
 .modal {
     background: #1e1e1e;
@@ -381,6 +381,30 @@ body {
     padding: 12px;
     border-radius: 8px;
     margin-bottom: 12px;
+}
+
+/* PAGO EN EFECTIVO */
+
+.payment-change {
+    background: #292929;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.payment-change-result {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.payment-change-result.valid {
+    color: #20c997;
+}
+
+.payment-change-result.invalid {
+    color: #ff5c6c;
 }
 
 /* SCANNER */
@@ -924,7 +948,10 @@ body {
                 Medio de pago
             </label>
 
-            <select id="payment-method">
+            <select
+                id="payment-method"
+                onchange="updatePaymentMethod()"
+            >
 
                 <option value="efectivo">
                     💵 Efectivo
@@ -943,6 +970,37 @@ body {
                 </option>
 
             </select>
+
+        </div>
+
+        <div
+            id="cash-payment-box"
+            class="payment-change"
+        >
+
+            <div class="form-group">
+
+                <label>
+                    Monto recibido
+                </label>
+
+                <input
+                    id="cash-received"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Ingresá el monto recibido"
+                    oninput="calculateChange()"
+                >
+
+            </div>
+
+            <div
+                id="cash-change"
+                class="payment-change-result"
+            >
+                Vuelto: $0
+            </div>
 
         </div>
 
@@ -1173,10 +1231,6 @@ async function openScanner(mode = "sale") {
 
         /*
          * SOLICITAR LA MAYOR RESOLUCIÓN POSIBLE
-         *
-         * "ideal" solicita una resolución alta,
-         * pero el navegador puede entregar la máxima
-         * que soporte realmente la cámara.
          */
 
         scannerStream =
@@ -1214,7 +1268,7 @@ async function openScanner(mode = "sale") {
 
 
         /*
-         * Mostrar la resolución REAL obtenida.
+         * MOSTRAR RESOLUCIÓN REAL
          */
 
         const track =
@@ -2604,18 +2658,130 @@ function openPayment() {
 
     }
 
+    const total =
+        getCartTotal();
+
     document.getElementById(
         "payment-total"
     ).textContent =
         "$" +
-        formatMoney(
-            getCartTotal()
-        );
+        formatMoney(total);
+
+    document.getElementById(
+        "payment-method"
+    ).value =
+        "efectivo";
+
+    document.getElementById(
+        "cash-received"
+    ).value = "";
+
+    document.getElementById(
+        "cash-change"
+    ).textContent =
+        "Vuelto: $0";
+
+    document.getElementById(
+        "cash-change"
+    ).className =
+        "payment-change-result";
+
+    document.getElementById(
+        "cash-payment-box"
+    ).style.display =
+        "block";
 
     document.getElementById(
         "payment-modal"
     ).style.display =
         "flex";
+
+}
+
+
+function calculateChange() {
+
+    const total =
+        getCartTotal();
+
+    const received =
+        Number(
+            document.getElementById(
+                "cash-received"
+            ).value
+        );
+
+    const changeLabel =
+        document.getElementById(
+            "cash-change"
+        );
+
+
+    if (
+        !Number.isFinite(received)
+        ||
+        received < total
+    ) {
+
+        const missing =
+            total -
+            (
+                Number.isFinite(received)
+                    ? received
+                    : 0
+            );
+
+        changeLabel.textContent =
+            "Faltan: $" +
+            formatMoney(missing);
+
+        changeLabel.className =
+            "payment-change-result invalid";
+
+        return false;
+
+    }
+
+
+    const change =
+        received - total;
+
+    changeLabel.textContent =
+        "Vuelto: $" +
+        formatMoney(change);
+
+    changeLabel.className =
+        "payment-change-result valid";
+
+    return true;
+
+}
+
+
+function updatePaymentMethod() {
+
+    const method =
+        document.getElementById(
+            "payment-method"
+        ).value;
+
+    const cashBox =
+        document.getElementById(
+            "cash-payment-box"
+        );
+
+
+    if (method === "efectivo") {
+
+        cashBox.style.display =
+            "block";
+
+    } else {
+
+        cashBox.style.display =
+            "none";
+
+    }
 
 }
 
@@ -2641,6 +2807,43 @@ function confirmSale() {
         ).value;
 
 
+    let cashReceived = null;
+    let cashChange = null;
+
+
+    /*
+     * VALIDACIÓN DEL EFECTIVO
+     */
+
+    if (
+        paymentMethod ===
+        "efectivo"
+    ) {
+
+        if (!calculateChange()) {
+
+            alert(
+                "El monto recibido es menor al total de la venta."
+            );
+
+            return;
+
+        }
+
+        cashReceived =
+            Number(
+                document.getElementById(
+                    "cash-received"
+                ).value
+            );
+
+        cashChange =
+            cashReceived -
+            total;
+
+    }
+
+
     const sale = {
 
         id: Date.now(),
@@ -2652,6 +2855,12 @@ function confirmSale() {
 
         paymentMethod:
             paymentMethod,
+
+        cashReceived:
+            cashReceived,
+
+        cashChange:
+            cashChange,
 
         items:
             cart.map(item => {
@@ -2953,6 +3162,45 @@ function renderHistory() {
                     .join("<br>");
 
 
+            let cashText = "";
+
+
+            if (
+                sale.paymentMethod ===
+                "efectivo"
+                &&
+                sale.cashReceived !==
+                null
+                &&
+                sale.cashReceived !==
+                undefined
+            ) {
+
+                cashText = `
+
+                    <br>
+
+                    <small>
+                        Recibido:
+                        $${formatMoney(
+                            sale.cashReceived
+                        )}
+                    </small>
+
+                    <br>
+
+                    <small>
+                        Vuelto:
+                        $${formatMoney(
+                            sale.cashChange
+                        )}
+                    </small>
+
+                `;
+
+            }
+
+
             div.innerHTML = `
 
                 <div class="sale-row">
@@ -2988,6 +3236,8 @@ function renderHistory() {
                             Pago:
                             ${payment}
                         </small>
+
+                        ${cashText}
 
                     </div>
 
